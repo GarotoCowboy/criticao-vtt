@@ -2,46 +2,30 @@ package config
 
 import (
 	"fmt"
+	"github.com/GarotoCowboy/vttProject/api/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	"os"
 )
 
 const (
-	user     = "admin"
+	host     = "localhost"
+	user     = "postgres"
 	password = "admin"
 	dbname   = "vtt"
-	port     = "9920"
+	port     = "5432"
 	timeZone = "america/sao_paulo"
 )
 
 func initializePostgreSQL() (*gorm.DB, error) {
 	logger := GetLogger("postgreSQL")
-	//check if database exists
-	dbPath := "./db/main.db"
 
-	_, err := os.Stat(dbPath)
-	if os.IsNotExist(err) {
-		logger.InfoF("database file does not exists, creating file...")
-		err = os.MkdirAll("./db", os.ModePerm)
-		if err != nil {
-			return nil, err
-		}
-
-		file, err := os.Create(dbPath)
-
-		if err != nil {
-			return nil, err
-		}
-
-		file.Close()
-	}
+	//todo: Fazer a criação do banco de dados sozinho
 
 	//creating database connection
 
 	//argument to DSN
-	argument := fmt.Sprintf("user=%v password=%v dbname=%v port=%v sslmode=disable TimeZone=%v",
-		user, password, dbname, port, timeZone)
+	argument := fmt.Sprintf("host= %v user=%v password=%v dbname=%v port=%v sslmode=disable TimeZone=%v",
+		host, user, password, dbname, port, timeZone)
 
 	db, err := gorm.Open(postgres.New(postgres.Config{
 		DSN:                  argument,
@@ -52,14 +36,13 @@ func initializePostgreSQL() (*gorm.DB, error) {
 		return nil, err
 
 	}
+	//	Migrate the schema
 
-	//Migrate the schema
-
-	//err = db.AutoMigrate(&schemas.Opening{})
-	//if err != nil {
-	//	logger.ErrorF("sqlite auto-migrating error: %v", err)
-	//	return nil, err
-	//}
+	err = db.AutoMigrate(&models.User{})
+	if err != nil {
+		logger.ErrorF("postgres  auto-migrating error: %v", err)
+		return nil, err
+	}
 
 	//return db
 	return db, err

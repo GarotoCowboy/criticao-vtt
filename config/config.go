@@ -10,7 +10,7 @@ var (
 	logger *Logger
 )
 
-func Init() error {
+func InitPostgres() error {
 	var err error
 
 	//Initialize Postgrees
@@ -18,6 +18,7 @@ func Init() error {
 	if err != nil {
 		return fmt.Errorf("error initializing PostgreSQL: %v", err)
 	}
+
 	return nil
 }
 
