@@ -19,7 +19,7 @@ func GetUserHandler(ctx *gin.Context) {
 	user := models.User{}
 
 	if err := handler.GetDB().Where("id=?", id).First(&user).Error; err != nil {
-		handler.SendError(ctx, http.StatusBadRequest, err.Error())
+		handler.SendError(ctx, http.StatusNotFound, err.Error())
 	}
 	handler.SendSucess(ctx, "get-user", user)
 }
