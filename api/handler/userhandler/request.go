@@ -4,8 +4,6 @@ import (
 	"fmt"
 )
 
-
-
 func errParamIsRequired(name, typ string) error {
 	return fmt.Errorf("param %s (type: %s) is required", name, typ)
 }
@@ -54,4 +52,24 @@ func (r *CreateUserRequest) Validate() error {
 	//}
 
 	return nil
+}
+
+type UpdateUserRequest struct {
+	Username  string `json:"username"`
+	Password  string `json:"password"`
+	Email     string `json:"email"`
+	Firstname string `json:"firstname"`
+	Lastname  string `json:"lastname"`
+	ImageLink string `json:"imagelink"`
+}
+
+func (r *UpdateUserRequest) Validate() error {
+	//If any field is provided, validation is truthy
+	if r.Username != "" || r.Password != "" || r.Email != "" || r.Firstname != "" || r.Lastname != "" ||
+		r.ImageLink != "" {
+		return nil
+	}
+
+	//if none of the fields were provided, return falsy
+	return fmt.Errorf("at least one valid field mus be provided")
 }
