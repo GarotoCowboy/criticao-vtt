@@ -1,25 +1,22 @@
 package router
 
 import (
+	"github.com/GarotoCowboy/vttProject/api/handler"
+	"github.com/GarotoCowboy/vttProject/api/handler/userhandler"
 	"github.com/gin-gonic/gin"
-	"net/http"
 )
 
 func initializeRoutes(router *gin.Engine) {
 
-	//	handler.InitializeHandler()
+	handler.InitializeHandler()
 
-	var v1 *gin.RouterGroup = router.Group("api/v1")
+	var v1 = router.Group("api/v1")
 	{
 
-		v1.GET("/user", func(c *gin.Context) {
-			c.JSON(http.StatusOK, gin.H{
-				"message": "get user",
-			})
-		})
-		v1.GET("/users")
-		v1.POST("/user")
-		v1.DELETE("/user")
+		v1.GET("/user", userhandler.GetUserHandler)
+		v1.GET("/users", userhandler.ListUsersHandler)
+		v1.POST("/user", userhandler.CreateUserHandler)
+		v1.DELETE("/user", userhandler.DeleteUserHandler)
 		v1.PUT("/user")
 
 	}
