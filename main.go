@@ -20,6 +20,11 @@ func main() {
 		return
 	}
 
+	if err := config.CreateImgFolder(); err != nil {
+		logger.ErrorF("Error creating image folder: %v", err)
+		return
+	}
+
 	//Initialize the server
 	router.Initializer()
 
