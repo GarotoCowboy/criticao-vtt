@@ -18,6 +18,7 @@ func initializeRoutes(router *gin.Engine) {
 		v1.POST("/user", userhandler.CreateUserHandler)
 		v1.DELETE("/user", userhandler.DeleteUserHandler)
 		v1.PUT("/user", userhandler.UpdateUserHandler)
+		v1.POST("/user/upload", userhandler.UploadUserImg)
 
 	}
 
