@@ -20,7 +20,7 @@ func TestGenerateWrongSize(t *testing.T) {
 	expectedSize := 10
 	actualSize := 9
 
-	result := StringWithCharset(actualSize, charset)
+	result := StringWithCharset(actualSize)
 
 	if len(result) != expectedSize {
 		// esse teste "falha de propósito" para mostrar erro
