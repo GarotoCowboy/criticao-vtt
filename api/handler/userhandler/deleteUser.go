@@ -17,11 +17,11 @@ func DeleteUserHandler(ctx *gin.Context) {
 	}
 	user := models.User{}
 
-	if err := handler.GetDB().First(&user, id).Error; err != nil {
+	if err := handler.GetHandlerDB().First(&user, id).Error; err != nil {
 		handler.SendError(ctx, http.StatusNotFound, fmt.Sprintf("User with id: %s not found", id))
 		return
 	}
-	if err := handler.GetDB().Delete(&user).Error; err != nil {
+	if err := handler.GetHandlerDB().Delete(&user).Error; err != nil {
 		handler.SendError(ctx, http.StatusNotFound, fmt.Sprintf("error deleting user with id: %s", id))
 		return
 	}

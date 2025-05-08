@@ -1,4 +1,4 @@
-package userhandler
+package tablehandler
 
 import (
 	"github.com/GarotoCowboy/vttProject/api/handler"
@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-func GetUserHandler(ctx *gin.Context) {
+func GetTableHandler(ctx *gin.Context) {
 	id := ctx.Query("id")
 
 	if id == "" {
@@ -16,10 +16,15 @@ func GetUserHandler(ctx *gin.Context) {
 		return
 	}
 
-	user := models.User{}
+	table := models.Table{}
 
-	if err := handler.GetHandlerDB().Where("id=?", id).First(&user).Error; err != nil {
+	if err := handler.GetHandlerDB().
+		Preload("Owner").
+		Preload("Members").
+		Preload("Members.User").
+		First(&table).Error; err != nil {
 		handler.SendError(ctx, http.StatusNotFound, err.Error())
+		return
 	}
-	handler.SendSucess(ctx, "get-user", user)
+	handler.SendSucess(ctx, "get-table", table)
 }

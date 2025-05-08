@@ -14,7 +14,7 @@ func UpdateUserHandler(ctx *gin.Context) {
 	ctx.BindJSON(&request)
 
 	if err := request.Validate(); err != nil {
-		handler.GetLogger().ErrorF("Validation error: %v", err.Error())
+		handler.GetHandlerLogger().ErrorF("Validation error: %v", err.Error())
 		handler.SendError(ctx, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -25,8 +25,9 @@ func UpdateUserHandler(ctx *gin.Context) {
 	}
 
 	user := models.User{}
-	if err := handler.GetDB().First(&user, id).Error; err != nil {
+	if err := handler.GetHandlerDB().First(&user, id).Error; err != nil {
 		handler.SendError(ctx, http.StatusNotFound, "user not found")
+		return
 	}
 	//Update user
 
@@ -48,8 +49,8 @@ func UpdateUserHandler(ctx *gin.Context) {
 	if request.Lastname != "" {
 		user.Lastname = request.Lastname
 	}
-	if err := handler.GetDB().Save(&user).Error; err != nil {
-		handler.GetLogger().ErrorF("error updating user: %v", err.Error())
+	if err := handler.GetHandlerDB().Save(&user).Error; err != nil {
+		handler.GetHandlerLogger().ErrorF("error updating user: %v", err.Error())
 		return
 	}
 	handler.SendSucess(ctx, "update-user", user)
