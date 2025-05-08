@@ -71,5 +71,5 @@ func (r *UpdateUserRequest) Validate() error {
 	}
 
 	//if none of the fields were provided, return falsy
-	return fmt.Errorf("at least one valid field mus be provided")
+	return fmt.Errorf("at least one valid field must be provided")
 }
