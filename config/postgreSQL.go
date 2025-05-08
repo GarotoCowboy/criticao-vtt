@@ -57,7 +57,6 @@ func createDataBaseIfNotExists(logger *Logger) error {
 func initializePostgreSQL() (*gorm.DB, error) {
 	logger := GetLogger("postgreSQL")
 
-	//todo: Fazer a criação do banco de dados sozinho
 	if err := createDataBaseIfNotExists(logger); err != nil {
 		logger.ErrorF("Failed to create database %v", err)
 		return nil, fmt.Errorf("error to initializate PostgreSQL: %v", err)
@@ -79,8 +78,8 @@ func initializePostgreSQL() (*gorm.DB, error) {
 
 	}
 	//	Migrate the schema
-
-	err = db.AutoMigrate(&models.User{})
+	//err = db.Migrator().DropTable(&models.TableUser{})
+	err = db.AutoMigrate(&models.User{}, &models.Table{}, &models.TableUser{})
 	if err != nil {
 		logger.ErrorF("postgres  auto-migrating error: %v", err)
 		return nil, err

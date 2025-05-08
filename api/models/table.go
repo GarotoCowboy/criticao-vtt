@@ -9,7 +9,7 @@ type Table struct {
 	Name string `json:"name" gorm:"not null"`
 
 	OwnerID uint `json:"owner_id"`
-	Owner   User `json:"owner" gorm:"foreignKey:OwnerID"`
+	Owner   User `json:"owner" gorm:"foreignKey:OwnerID;constraint:OnUpdate:CASCADE;constraint:OnDelete:CASCADE"`
 
 	Members []TableUser `gorm:"foreignKey:TableID"`
 
