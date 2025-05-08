@@ -18,7 +18,3 @@ func StringWithCharset(length int) string {
 	}
 	return string(b)
 }
-
-func String(length int) string {
-	return StringWithCharset(length)
-}

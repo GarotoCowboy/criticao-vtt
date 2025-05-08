@@ -10,7 +10,7 @@ import (
 func ListUsersHandler(ctx *gin.Context) {
 
 	users := []models.User{}
-	if err := handler.GetDB().Find(&users).Error; err != nil {
+	if err := handler.GetHandlerDB().Find(&users).Error; err != nil {
 		handler.SendError(ctx, http.StatusInternalServerError, err.Error())
 		return
 	}

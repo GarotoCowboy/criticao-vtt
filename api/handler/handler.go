@@ -15,10 +15,10 @@ func InitializeHandler() {
 	db = config.GetPostgreSQL()
 }
 
-func GetLogger() *config.Logger {
+func GetHandlerLogger() *config.Logger {
 	return logger
 }
 
-func GetDB() *gorm.DB {
+func GetHandlerDB() *gorm.DB {
 	return db
 }
