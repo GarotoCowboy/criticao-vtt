@@ -59,7 +59,7 @@ func CreateTableHandler(ctx *gin.Context) {
 
 	if err := handler.GetHandlerDB().Create(&ownerAsTableUser).Error; err != nil {
 		handler.GetHandlerLogger().ErrorF("Error creating owner tableUser: %v", err.Error())
-		// não precisa retornar 500, mas pode logar o erro
+
 	}
 
 	// Recupere a tabela com preload completo

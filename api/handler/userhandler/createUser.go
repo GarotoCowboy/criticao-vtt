@@ -1,6 +1,7 @@
 package userhandler
 
 import (
+	"github.com/GarotoCowboy/vttProject/api/dto"
 	"github.com/GarotoCowboy/vttProject/api/handler"
 	"github.com/GarotoCowboy/vttProject/api/models"
 	"github.com/GarotoCowboy/vttProject/api/utils"
@@ -8,8 +9,22 @@ import (
 	"net/http"
 )
 
+// @BasePath /api/v1
+
+// CreateUserHandler
+// @Summary Create User
+// @Schemes
+// @Description Create User
+// @Tags User
+// @Accept json
+// @Produce json
+// @Param user body UpdateUserRequest true "User data"
+// @Success 200 {object} dto.UserResponse "User Created sucessfully"
+// @Failure 400 {object} dto.ErrorResponse "Bad request error"
+// @Failure 500 {object} dto.ErrorResponse "Internal Server Error"
+// @Router /user [post]
 func CreateUserHandler(ctx *gin.Context) {
-	request := CreateUserRequest{}
+	request := dto.CreateUserRequest{}
 	//err := ctx.BindJSON(&request)
 	if err := ctx.BindJSON(&request); err != nil {
 		handler.GetHandlerLogger().ErrorF("Error binding json: %v", err.Error())
@@ -53,5 +68,6 @@ func CreateUserHandler(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
+
 	handler.SendSucess(ctx, "create-user", user)
 }
