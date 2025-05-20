@@ -1,35 +1,55 @@
 package tablehandler
 
 import (
-	"fmt"
+	"github.com/GarotoCowboy/vttProject/api/dto/tableDTO"
 	"github.com/GarotoCowboy/vttProject/api/handler"
-	"github.com/GarotoCowboy/vttProject/api/models"
+	tableService "github.com/GarotoCowboy/vttProject/api/service/table"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"strconv"
 )
 
-func DeleteTableHandler(ctx *gin.Context) {
-	id := ctx.Query("id")
-	if id == "" {
-		handler.SendError(ctx, http.StatusBadRequest, errParamIsRequired("id",
-			"queryParameter").Error())
-		return
-	}
-	table := models.Table{}
+// @BasePath /api/v1
 
-	if err := handler.GetHandlerDB().
-		First(&table, id).Error; err != nil {
-		handler.SendError(ctx, http.StatusNotFound, fmt.Sprintf("Table with id: %s not found", id))
+// DeleteTableHandler
+// @Summary Delete a Table
+// @Schemes
+// @Description Delete a Table by ID via query parameter
+// @Tags Table
+// @Accept json
+// @Produce json
+// @Param id query int true "Table ID"
+// @Success 200 {string} string "No content"
+// @Failure 400 {object} tableDTO.ErrorResponse "Invalid ID supplied"
+// @Failure 404 {object} tableDTO.ErrorResponse "User Not Found"
+// @Failure 500 {object} tableDTO.ErrorResponse "Internal Server Error"
+// @Router /table [delete]
+func DeleteTableHandler(ctx *gin.Context) {
+	idStr := ctx.Query("id")
+
+	if idStr == "" {
+		handler.SendError(ctx, http.StatusBadRequest, tableDTO.ErrParamIsRequired("id", "queryParameter").Error())
 		return
 	}
-	if err := handler.GetHandlerDB().
-		Preload("Owner").
-		Preload("Members").
-		Preload("Members.Owner").
-		Delete(&table).Error; err != nil {
-		handler.SendError(ctx, http.StatusNotFound, fmt.Sprintf("error deleting table with id: %s", id))
+	id, err := strconv.Atoi(idStr)
+	if err != nil || id <= 0 {
+		handler.SendError(ctx, http.StatusBadRequest, "id must be a positive integer")
 		return
 	}
-	handler.SendSucess(ctx, "delete-user", table)
+
+	tableData, err := tableService.DeleteTable(handler.GetHandlerDB(), uint(id))
+	if err != nil {
+		handler.SendError(ctx, http.StatusBadRequest, err.Error())
+	}
+
+	resp := tableDTO.TableResponse{
+		ID:         tableData.ID,
+		Name:       tableData.Name,
+		Password:   tableData.Password,
+		OwnerID:    tableData.OwnerID,
+		InviteLink: tableData.InviteLink,
+	}
+
+	handler.SendSucess(ctx, "delete-table", resp)
 
 }
