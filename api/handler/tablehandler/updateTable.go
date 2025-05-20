@@ -1,6 +1,7 @@
 package tablehandler
 
 import (
+	tableDTO "github.com/GarotoCowboy/vttProject/api/dto/tableDTO"
 	"github.com/GarotoCowboy/vttProject/api/handler"
 	"github.com/GarotoCowboy/vttProject/api/models"
 	"github.com/GarotoCowboy/vttProject/api/utils"
@@ -10,7 +11,7 @@ import (
 
 func UpdateTableHandler(ctx *gin.Context) {
 
-	request := UpdateTableRequest{}
+	request := tableDTO.UpdateTableRequest{}
 
 	ctx.BindJSON(&request)
 
@@ -21,16 +22,16 @@ func UpdateTableHandler(ctx *gin.Context) {
 	}
 	id := ctx.Query("id")
 	if id == "" {
-		handler.SendError(ctx, http.StatusBadRequest, errParamIsRequired("id", "string").Error())
+		handler.SendError(ctx, http.StatusBadRequest, tableDTO.ErrParamIsRequired("id", "string").Error())
 		return
 	}
 
 	table := models.Table{}
 	if err := handler.GetHandlerDB().First(&table, id).Error; err != nil {
-		handler.SendError(ctx, http.StatusNotFound, "table not found")
+		handler.SendError(ctx, http.StatusNotFound, "tableDTO not found")
 		return
 	}
-	//Update table
+	//Update tableDTO
 
 	if request.Name != "" {
 		table.Name = request.Name
@@ -46,12 +47,12 @@ func UpdateTableHandler(ctx *gin.Context) {
 	}
 
 	//if request.Members != nil {
-	//	table.Members = request.Members
+	//	tableDTO.Members = request.Members
 	//}
 
 	if err := handler.GetHandlerDB().Save(&table).Error; err != nil {
-		handler.GetHandlerLogger().ErrorF("error updating table: %v", err.Error())
+		handler.GetHandlerLogger().ErrorF("error updating tableDTO: %v", err.Error())
 		return
 	}
-	handler.SendSucess(ctx, "update-table", table)
+	handler.SendSucess(ctx, "update-tableDTO", table)
 }

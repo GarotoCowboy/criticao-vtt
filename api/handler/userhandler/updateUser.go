@@ -1,57 +1,53 @@
 package userhandler
 
 import (
+	userDTO "github.com/GarotoCowboy/vttProject/api/dto/userDTO"
 	"github.com/GarotoCowboy/vttProject/api/handler"
-	"github.com/GarotoCowboy/vttProject/api/models"
+	userService "github.com/GarotoCowboy/vttProject/api/service/user"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"strconv"
 )
 
+// @BasePath /api/v1
+
+// UpdateUserHandler
+// @Summary Update user
+// @Schemes
+// @Description Update User by ID via query parameter
+// @Tags User
+// @Accept json
+// @Produce json
+// @Param userDTO body userDTO.CreateUserRequest true "User data"
+// @Param id query int true "User ID"
+// @Success 200 {object} userDTO.UserResponse "User Created sucessfully"
+// @Failure 400 {object} userDTO.ErrorResponse "Bad request error"
+// @Failure 500 {object} userDTO.ErrorResponse "Internal Server Error"
+// @Router /user [put]
 func UpdateUserHandler(ctx *gin.Context) {
 
-	request := UpdateUserRequest{}
+	request := userDTO.UpdateUserRequest{}
 
-	ctx.BindJSON(&request)
-
-	if err := request.Validate(); err != nil {
-		handler.GetHandlerLogger().ErrorF("Validation error: %v", err.Error())
-		handler.SendError(ctx, http.StatusBadRequest, err.Error())
-		return
-	}
-	id := ctx.Query("id")
-	if id == "" {
-		handler.SendError(ctx, http.StatusBadRequest, errParamIsRequired("id", "string").Error())
+	idParam := ctx.Query("id")
+	id, err := strconv.ParseUint(idParam, 10, 64)
+	if err != nil {
+		handler.SendError(ctx, http.StatusBadRequest, "invalid user ID")
 		return
 	}
 
-	user := models.User{}
-	if err := handler.GetHandlerDB().First(&user, id).Error; err != nil {
-		handler.SendError(ctx, http.StatusNotFound, "user not found")
+	if err := ctx.BindJSON(&request); err != nil {
+		handler.GetHandlerLogger().ErrorF("Error binding json: %v", err.Error())
+		handler.SendError(ctx, http.StatusBadRequest, "invalid request body")
 		return
 	}
-	//Update user
 
-	if request.Username != "" {
-		user.Username = request.Username
-	}
-	if request.Password != "" {
-		user.Password = request.Password
-	}
-	if request.ImageLink != "" {
-		user.ImageLink = request.ImageLink
-	}
-	if request.Email != "" {
-		user.Email = request.Email
-	}
-	if request.Firstname != "" {
-		user.Firstname = request.Firstname
-	}
-	if request.Lastname != "" {
-		user.Lastname = request.Lastname
-	}
-	if err := handler.GetHandlerDB().Save(&user).Error; err != nil {
-		handler.GetHandlerLogger().ErrorF("error updating user: %v", err.Error())
+	user, err := userService.UpdateUser(handler.GetHandlerDB(), uint(id), request)
+	if err != nil {
+		handler.GetHandlerLogger().ErrorF("Error creating user: %v", err.Error())
+		handler.SendError(ctx, http.StatusInternalServerError, err.Error())
 		return
 	}
-	handler.SendSucess(ctx, "update-user", user)
+
+	handler.SendSucess(ctx, "Update-user", user)
+
 }

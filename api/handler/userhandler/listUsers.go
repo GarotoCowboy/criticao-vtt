@@ -1,8 +1,9 @@
 package userhandler
 
 import (
+	"github.com/GarotoCowboy/vttProject/api/dto/userDTO"
 	"github.com/GarotoCowboy/vttProject/api/handler"
-	"github.com/GarotoCowboy/vttProject/api/models"
+	userService "github.com/GarotoCowboy/vttProject/api/service/user"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -16,15 +17,30 @@ import (
 // @Tags User
 // @Accept json
 // @Produce json
-// @Success 200 {object} dto.UserResponse "No content"
-// @Failure 500 {object} dto.ErrorResponse "Internal Server Error"
+// @Success 200 {object} userDTO.UserResponse "No content"
+// @Failure 500 {object} userDTO.ErrorResponse "Internal Server Error"
 // @Router /users [get]
 func ListUsersHandler(ctx *gin.Context) {
 
-	users := []models.User{}
-	if err := handler.GetHandlerDB().Find(&users).Error; err != nil {
-		handler.SendError(ctx, http.StatusInternalServerError, err.Error())
+	users, err := userService.ListUsers(handler.GetHandlerDB())
+	if err != nil {
+		handler.GetHandlerLogger().ErrorF("Error binding json: %v", err.Error())
+		handler.SendError(ctx, http.StatusBadRequest, "invalid request body")
 		return
 	}
-	handler.SendSucess(ctx, "list-users", users)
+
+	var responses = []userDTO.UserResponse{}
+
+	for _, user := range users {
+		var resp = userDTO.UserResponse{
+			ID:        user.ID,
+			Firstname: user.Firstname,
+			Lastname:  user.Lastname,
+			Email:     user.Email,
+			Username:  user.Username,
+			ImageLink: user.ImageLink,
+		}
+		responses = append(responses, resp)
+	}
+	handler.SendSucess(ctx, "list-users", responses)
 }

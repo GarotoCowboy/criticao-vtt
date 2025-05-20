@@ -1,11 +1,12 @@
 package userhandler
 
 import (
-	"github.com/GarotoCowboy/vttProject/api/dto"
+	"github.com/GarotoCowboy/vttProject/api/dto/userDTO"
 	"github.com/GarotoCowboy/vttProject/api/handler"
-	"github.com/GarotoCowboy/vttProject/api/models"
+	userService "github.com/GarotoCowboy/vttProject/api/service/user"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"strconv"
 )
 
 // @BasePath /api/v1
@@ -13,28 +14,43 @@ import (
 // GetUserHandler
 // @Summary Get User
 // @Schemes
-// @Description Get a user by ID via query parameter
+// @Description Get a userDTO by ID via query parameter
 // @Tags User
 // @Accept json
 // @Produce json
 // @Param id query int true "User ID"
-// @Success 200 {object} dto.UserResponse "No content"
-// @Failure 400 {object} dto.ErrorResponse "Invalid ID supplied"
-// @Failure 404 {object} dto.ErrorResponse "User Not Found"
+// @Success 200 {object} userDTO.UserResponse "No content"
+// @Failure 400 {object} userDTO.ErrorResponse "Invalid ID supplied"
+// @Failure 404 {object} userDTO.ErrorResponse "User Not Found"
 // @Router /user [get]
 func GetUserHandler(ctx *gin.Context) {
-	id := ctx.Query("id")
 
-	if id == "" {
-		handler.SendError(ctx, http.StatusBadRequest, dto.ErrParamIsRequired("id",
-			"queryParameter").Error())
+	idStr := ctx.Query("id")
+
+	if idStr == "" {
+		handler.SendError(ctx, http.StatusBadRequest, userDTO.ErrParamIsRequired("id", "queryParameter").Error())
+		return
+	}
+	id, err := strconv.Atoi(idStr)
+	if err != nil || id <= 0 {
+		handler.SendError(ctx, http.StatusBadRequest, "id must be a positive integer")
 		return
 	}
 
-	user := models.User{}
+	userData, err := userService.GetUser(handler.GetHandlerDB(), uint(id))
 
-	if err := handler.GetHandlerDB().Where("id=?", id).First(&user).Error; err != nil {
-		handler.SendError(ctx, http.StatusNotFound, err.Error())
+	if err != nil {
+		handler.SendError(ctx, http.StatusBadRequest, err.Error())
 	}
-	handler.SendSucess(ctx, "get-user", user)
+
+	resp := userDTO.UserResponse{
+		ID:        userData.ID,
+		Firstname: userData.Firstname,
+		Lastname:  userData.Lastname,
+		Email:     userData.Email,
+		Username:  userData.Username,
+		ImageLink: userData.ImageLink,
+	}
+
+	handler.SendSucess(ctx, "getUser", resp)
 }
