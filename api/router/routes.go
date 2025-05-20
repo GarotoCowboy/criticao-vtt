@@ -3,6 +3,7 @@ package router
 import (
 	"github.com/GarotoCowboy/vttProject/api/handler"
 	"github.com/GarotoCowboy/vttProject/api/handler/tablehandler"
+	"github.com/GarotoCowboy/vttProject/api/handler/tableuserhandler"
 	"github.com/GarotoCowboy/vttProject/api/handler/userhandler"
 	_ "github.com/GarotoCowboy/vttProject/docs"
 	"github.com/gin-gonic/gin"
@@ -31,13 +32,13 @@ func initializeRoutes(router *gin.Engine) {
 		v1.POST("/table", tablehandler.CreateTableHandler)
 		v1.DELETE("/table", tablehandler.DeleteTableHandler)
 		v1.PUT("/table", tablehandler.UpdateTableHandler)
-		////v1.POST("/user/upload", userhandler.UploadUserImg)
+		////v1.POST("/userDTO/upload", userhandler.UploadUserImg)
 		//
 		////TableUser Requests
-		//v1.GET("/tableUser", userhandler.GetUserHandler)
+		v1.GET("/tableUser", tableuserhandler.GetTableUserHandler)
 		//v1.GET("/tablesUsers", userhandler.ListUsersHandler)
-		//v1.POST("/tableUser", tableuserhandler.CreateTableUserHandler)
-		//v1.DELETE("/tableUser", userhandler.DeleteUserHandler)
+		v1.POST("/tableUser", tableuserhandler.CreateTableUserHandler)
+		v1.DELETE("/tableUser", tableuserhandler.DeleteTableUserHandler)
 		//v1.PUT("/tableUser", userhandler.UpdateUserHandler)
 	}
 
