@@ -1,58 +1,53 @@
 package tablehandler
 
 import (
-	tableDTO "github.com/GarotoCowboy/vttProject/api/dto/tableDTO"
+	"github.com/GarotoCowboy/vttProject/api/dto/tableDTO"
 	"github.com/GarotoCowboy/vttProject/api/handler"
-	"github.com/GarotoCowboy/vttProject/api/models"
-	"github.com/GarotoCowboy/vttProject/api/utils"
+	tableService "github.com/GarotoCowboy/vttProject/api/service/table"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"strconv"
 )
 
+// @BasePath /api/v1
+
+// UpdateTableHandler
+// @Summary Update table
+// @Schemes
+// @Description Update Table by ID via query parameter
+// @Tags Table
+// @Accept json
+// @Produce json
+// @Param tableDTO body tableDTO.UpdateTableRequest true "Table data"
+// @Param id query int true "Table ID"
+// @Success 200 {object} tableDTO.TableResponse "Table Created sucessfully"
+// @Failure 400 {object} tableDTO.ErrorResponse "Bad request error"
+// @Failure 500 {object} tableDTO.ErrorResponse "Internal Server Error"
+// @Router /table [put]
 func UpdateTableHandler(ctx *gin.Context) {
 
 	request := tableDTO.UpdateTableRequest{}
 
-	ctx.BindJSON(&request)
-
-	if err := request.Validate(); err != nil {
-		handler.GetHandlerLogger().ErrorF("Validation error: %v", err.Error())
-		handler.SendError(ctx, http.StatusBadRequest, err.Error())
-		return
-	}
-	id := ctx.Query("id")
-	if id == "" {
-		handler.SendError(ctx, http.StatusBadRequest, tableDTO.ErrParamIsRequired("id", "string").Error())
+	idParam := ctx.Query("id")
+	id, err := strconv.ParseUint(idParam, 10, 64)
+	if err != nil {
+		handler.SendError(ctx, http.StatusBadRequest, "invalid table ID")
 		return
 	}
 
-	table := models.Table{}
-	if err := handler.GetHandlerDB().First(&table, id).Error; err != nil {
-		handler.SendError(ctx, http.StatusNotFound, "tableDTO not found")
+	if err := ctx.BindJSON(&request); err != nil {
+		handler.GetHandlerLogger().ErrorF("Error binding json: %v", err.Error())
+		handler.SendError(ctx, http.StatusBadRequest, "invalid request body")
 		return
 	}
-	//Update tableDTO
 
-	if request.Name != "" {
-		table.Name = request.Name
-	}
-	if request.Password != "" {
-		hashedPassword, err := utils.HashPassword(table.Password)
-		if err != nil {
-			handler.GetHandlerLogger().ErrorF("Error hashing password: %v", err.Error())
-			handler.SendError(ctx, http.StatusBadRequest, err.Error())
-			return
-		}
-		table.Password = string(hashedPassword)
-	}
-
-	//if request.Members != nil {
-	//	tableDTO.Members = request.Members
-	//}
-
-	if err := handler.GetHandlerDB().Save(&table).Error; err != nil {
-		handler.GetHandlerLogger().ErrorF("error updating tableDTO: %v", err.Error())
+	user, err := tableService.UpdateTable(handler.GetHandlerDB(), uint(id), request)
+	if err != nil {
+		handler.GetHandlerLogger().ErrorF("Error updating table: %v", err.Error())
+		handler.SendError(ctx, http.StatusInternalServerError, err.Error())
 		return
 	}
-	handler.SendSucess(ctx, "update-tableDTO", table)
+
+	handler.SendSucess(ctx, "Update-table", user)
+
 }

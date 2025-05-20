@@ -12,6 +12,6 @@ type TableUser struct {
 
 	Role Role
 
-	Table Table
-	User  User
+	Table Table `gorm:"constraint:OnDelete:CASCADE"`
+	User  User  `gorm:"constraint:OnDelete:CASCADE"`
 }

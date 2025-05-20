@@ -1,22 +1,33 @@
-package tablehandler
+package tableDTO
 
 import (
 	"fmt"
-	"github.com/GarotoCowboy/vttProject/api/models"
 )
 
-func errParamIsRequired(name, typ string) error {
+func ErrParamIsRequired(name, typ string) error {
 	return fmt.Errorf("param %s (type: %s) is required", name, typ)
 }
 
+type TableResponse struct {
+	ID         uint        `json:"id"`
+	Name       string      `json:"firstname"`
+	OwnerID    uint        `json:"owner_id"`
+	InviteLink string      `json:"invite_link"`
+	Owner      interface{} `json:"owner,omitempty"`
+	Password   string      `json:"password"`
+}
+
+// ErrorResponse reports the error in the userDTO request
+type ErrorResponse struct {
+	Message string `json:"message"`
+	Code    int    `json:"code"`
+}
+
 type CreateTableRequest struct {
-	Name string `json:"name"`
-
-	OwnerID uint `json:"owner_id"`
-
-	Members    []models.TableUser `json:"members"`
-	InviteLink string             `json:"invite_link"`
-	Password   string             `json:"password"`
+	Name    string `json:"name"`
+	OwnerID uint   `json:"owner_id"`
+	//InviteLink string             `json:"invite_link"`
+	Password string `json:"password"`
 }
 
 func (r *CreateTableRequest) Validate() error {
@@ -25,10 +36,10 @@ func (r *CreateTableRequest) Validate() error {
 		return fmt.Errorf("request body is empty")
 	}
 	if r.Name == "" {
-		return errParamIsRequired("name", "string")
+		return ErrParamIsRequired("name", "string")
 	}
 	if r.OwnerID == 0 {
-		return errParamIsRequired("owner_id", "uint")
+		return ErrParamIsRequired("owner_id", "uint")
 	}
 	//if r.InviteLink == ""{
 	//	return errParamIsRequired("invite_link", "string")

@@ -1,30 +1,55 @@
 package tablehandler
 
 import (
+	"github.com/GarotoCowboy/vttProject/api/dto/tableDTO"
 	"github.com/GarotoCowboy/vttProject/api/handler"
-	"github.com/GarotoCowboy/vttProject/api/models"
+	tableService "github.com/GarotoCowboy/vttProject/api/service/table"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"strconv"
 )
 
+// @BasePath /api/v1
+
+// GetTableHandler
+// @Summary Get Table
+// @Schemes
+// @Description Get a table by ID via query parameter
+// @Tags Table
+// @Accept json
+// @Produce json
+// @Param id query int true "Table ID"
+// @Success 200 {object} tableDTO.TableResponse "No content"
+// @Failure 400 {object} tableDTO.ErrorResponse "Invalid ID supplied"
+// @Failure 404 {object} tableDTO.ErrorResponse "User Not Found"
+// @Router /table [get]
 func GetTableHandler(ctx *gin.Context) {
-	id := ctx.Query("id")
+	idStr := ctx.Query("id")
 
-	if id == "" {
-		handler.SendError(ctx, http.StatusBadRequest, errParamIsRequired("id",
-			"queryParameter").Error())
+	if idStr == "" {
+		handler.SendError(ctx, http.StatusBadRequest, tableDTO.ErrParamIsRequired("id", "queryParameter").Error())
+		return
+	}
+	id, err := strconv.Atoi(idStr)
+	if err != nil || id <= 0 {
+		handler.SendError(ctx, http.StatusBadRequest, "id must be a positive integer")
 		return
 	}
 
-	table := models.Table{}
-
-	if err := handler.GetHandlerDB().
-		Preload("Owner").
-		Preload("Members").
-		Preload("Members.User").
-		First(&table).Error; err != nil {
-		handler.SendError(ctx, http.StatusNotFound, err.Error())
+	tableData, err := tableService.GetTable(handler.GetHandlerDB(), uint(id))
+	if err != nil {
+		handler.SendError(ctx, http.StatusBadRequest, err.Error())
 		return
 	}
-	handler.SendSucess(ctx, "get-table", table)
+
+	resp := tableDTO.TableResponse{
+		ID:         tableData.ID,
+		Name:       tableData.Name,
+		Password:   tableData.Password,
+		OwnerID:    tableData.OwnerID,
+		Owner:      tableData.Owner,
+		InviteLink: tableData.InviteLink,
+	}
+
+	handler.SendSucess(ctx, "getTable", resp)
 }

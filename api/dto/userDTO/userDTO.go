@@ -1,4 +1,4 @@
-package dto
+package userDTO
 
 import "fmt"
 
@@ -16,7 +16,7 @@ type UserResponse struct {
 	ImageLink string `json:"imageLink,omitempty"`
 }
 
-// ErrorResponse reports the error in the user request
+// ErrorResponse reports the error in the userDTO request
 type ErrorResponse struct {
 	Message string `json:"message"`
 	Code    int    `json:"code"`

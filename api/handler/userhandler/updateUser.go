@@ -18,7 +18,7 @@ import (
 // @Tags User
 // @Accept json
 // @Produce json
-// @Param userDTO body userDTO.CreateUserRequest true "User data"
+// @Param userDTO body userDTO.UpdateUserRequest true "User data"
 // @Param id query int true "User ID"
 // @Success 200 {object} userDTO.UserResponse "User Created sucessfully"
 // @Failure 400 {object} userDTO.ErrorResponse "Bad request error"
@@ -43,7 +43,7 @@ func UpdateUserHandler(ctx *gin.Context) {
 
 	user, err := userService.UpdateUser(handler.GetHandlerDB(), uint(id), request)
 	if err != nil {
-		handler.GetHandlerLogger().ErrorF("Error creating user: %v", err.Error())
+		handler.GetHandlerLogger().ErrorF("Error updating user: %v", err.Error())
 		handler.SendError(ctx, http.StatusInternalServerError, err.Error())
 		return
 	}
