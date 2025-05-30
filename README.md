@@ -1,5 +1,6 @@
 <div align = "center"> <h1>Criticão (Projeto de Estudo)</h1></div>
-<div align="center"><img src="https://github-production-user-asset-6210df.s3.amazonaws.com/34407863/449215926-c00fd4ac-3068-47c7-919f-e1b12cbf8d9f.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAVCODYLSA53PQK4ZA%2F20250530%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20250530T112349Z&X-Amz-Expires=300&X-Amz-Signature=b38be9821f92e3ab8ef20cb5d41050d6979b066657285bbcce93f93e0e7796ca&X-Amz-SignedHeaders=host" width="200px"></div>
+<div align="center"><img src="https://github.com/user-attachments/assets/a478f526-e66e-41de-a6e9-1379f93c5f88" width="250px">
+</div>
 <div align="center">
   <h3>Plataforma RESTful com gRPC para RPG de Mesa</h3>
   <p><i>Projeto desenvolvido para aperfeiçoar conhecimentos em Go (Golang), tecnologias de backend e frontend.</i></p>
