@@ -1,5 +1,5 @@
-<div align = "center"> <h1>VTT Project (Projeto de Estudo)</h1></div>
-
+<div align = "center"> <h1>Criticão (Projeto de Estudo)</h1></div>
+![criticão logo](https://github.com/user-attachments/assets/c00fd4ac-3068-47c7-919f-e1b12cbf8d9f)
 <div align="center">
   <h3>Plataforma RESTful com gRPC para RPG de Mesa</h3>
   <p><i>Projeto desenvolvido para aperfeiçoar conhecimentos em Go (Golang), tecnologias de backend e frontend.</i></p>
