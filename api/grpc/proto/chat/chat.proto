@@ -1,0 +1,84 @@
+syntax = "proto3";
+
+package chat;
+
+option go_package = "pb/";
+
+import "google/protobuf/timestamp.proto";
+
+service Chat{
+  rpc SendMessage(stream ChatMessageRequest) returns (stream ChatMessageResponse);
+  rpc ListMessages(ListMessagesRequest) returns (stream ChatMessageResponse);
+  rpc UpdateMessage(UpdateMessageRequest)returns (ChatMessageResponse);
+  rpc SendPrivateMessage(stream ChatMessagePrivateRequest) returns (stream ChatMessageResponse);
+}
+
+
+enum MessageType{
+  TEXT = 0;
+  IMAGE = 1;
+  VIDEO = 2;
+  AUDIO = 3;
+  SYSTEM = 4;
+}
+
+enum MessageStatus{
+  SENT = 0;
+  DELIVERED = 1;
+  READ = 2;
+}
+
+message ListMessagesRequest{
+  uint32 table_id = 1;
+}
+
+message ChatMessageRequest{
+ uint32 table_user_id = 1;
+ // string username = 2;
+   string message = 3;
+  string message_id = 4;
+  string media_url = 5;
+  string attachments = 6;
+  MessageType messageType = 7;
+  MessageStatus messageStatus = 8;
+  google.protobuf.Timestamp send_at = 9;
+  string reply_to_message_id = 10;
+}
+
+message ChatMessageResponse{
+  string message = 1;
+  string username = 2;
+  string media_url = 3;
+  string attachments = 4;
+  MessageType messageType = 5;
+  MessageStatus messageStatus = 6;
+  google.protobuf.Timestamp send_at = 7;
+  string message_id = 8;
+  bool is_deleted = 9;
+  string reply_to_message_id = 10;
+}
+
+message ChatMessagePrivateRequest{
+  uint32 table_user_id = 1;
+  uint32 to_table_user_id = 2;
+  string username = 3;
+  string message = 4;
+  string message_id = 5;
+  string media_url = 6;
+  string attachments = 7;
+  MessageType messageType = 8;
+  MessageStatus messageStatus = 9;
+  google.protobuf.Timestamp send_at = 10;
+  string reply_to_message_id = 11;
+}
+
+  message UpdateMessageRequest{
+  uint32 table_user_id = 1;
+  string message_id = 2;
+  string message = 3;
+  string media_url = 4;
+  string attachments = 5;
+  MessageType messageType = 6;
+  MessageStatus messageStatus = 7;
+  google.protobuf.Timestamp updated_at = 8;
+}
