@@ -2,6 +2,7 @@ package tableDTO
 
 import (
 	"fmt"
+	"gorm.io/gorm"
 )
 
 func ErrParamIsRequired(name, typ string) error {
@@ -9,12 +10,13 @@ func ErrParamIsRequired(name, typ string) error {
 }
 
 type TableResponse struct {
-	ID         uint        `json:"id"`
-	Name       string      `json:"firstname"`
-	OwnerID    uint        `json:"owner_id"`
-	InviteLink string      `json:"invite_link"`
-	Owner      interface{} `json:"owner,omitempty"`
-	Password   string      `json:"password"`
+	ID         uint           `json:"id"`
+	Name       string         `json:"firstname"`
+	OwnerID    uint           `json:"owner_id"`
+	InviteLink string         `json:"invite_link"`
+	Owner      interface{}    `json:"owner,omitempty"`
+	Password   string         `json:"password"`
+	Deleted_At gorm.DeletedAt `json:"deleted_at" gorm:"index"`
 }
 
 // ErrorResponse reports the error in the userDTO request

@@ -1,6 +1,7 @@
 package models
 
 import (
+	"github.com/GarotoCowboy/vttProject/api/models/consts"
 	"gorm.io/gorm"
 )
 
@@ -16,10 +17,10 @@ type User struct {
 }
 
 type GameMaster interface {
-	BanUser(u *User)
-	SetRole(set Role, u *User) bool
-	KickUser(u User)
-	sendAnonymousMessage(u User, message string) string
+	BanUser(u *User) error
+	SetRole(set consts.Role, u *User) (bool, error)
+	KickUser(u *User)
+	SendAnonymousMessage(u *User, message string) string
 	//iniciativeTracker(sheet Sheet)Sheet
 	//createSheet(sheet Sheet)Sheet
 }

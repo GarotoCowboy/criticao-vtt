@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/GarotoCowboy/vttProject/api/dto/tableDTO"
 	"github.com/GarotoCowboy/vttProject/api/models"
+	"github.com/GarotoCowboy/vttProject/api/models/consts"
 	"github.com/GarotoCowboy/vttProject/api/utils"
 	"gorm.io/gorm"
 )
@@ -43,7 +44,7 @@ func CreateTable(db *gorm.DB, req tableDTO.CreateTableRequest) (models.Table, er
 	ownerMember := models.TableUser{
 		TableID: table.ID,
 		UserID:  req.OwnerID,
-		Role:    models.Role(2),
+		Role:    consts.Role(2),
 	}
 
 	if err := db.Create(&ownerMember).Error; err != nil {
@@ -82,7 +83,7 @@ func DeleteTable(db *gorm.DB, id uint) (models.Table, error) {
 }
 
 func GetTable(db *gorm.DB, id uint) (models.Table, error) {
-	if id == 0 {
+	if id <= 0 {
 		return models.Table{}, errors.New("invalid table_id")
 	}
 
