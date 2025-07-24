@@ -2,7 +2,7 @@ package models
 
 import "gorm.io/gorm"
 
-// todo: TA ERRADO TEM Q ARRUMAR >:(
+// create an table
 type Table struct {
 	gorm.Model
 
@@ -11,7 +11,7 @@ type Table struct {
 	OwnerID uint `json:"owner_id"`
 	Owner   User `json:"owner" gorm:"foreignKey:OwnerID;constraint:OnUpdate:CASCADE;constraint:OnDelete:CASCADE"`
 
-	Members []TableUser `gorm:"foreignKey:TableID"`
+	Members []TableUser `gorm:"foreignKey:TableID;constraint:OnDelete:CASCADE"`
 
 	InviteLink string `json:"inviteLink" gorm:"unique"`
 	Password   string `json:"password"`
