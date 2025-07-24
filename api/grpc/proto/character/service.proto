@@ -1,0 +1,125 @@
+syntax = "proto3";
+
+package character;
+
+import "sheet.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "pb/";
+
+service CharacterService{
+  rpc CreateCharacter(CreateCharacterRequest) returns (CreateCharacterResponse);
+  rpc GetCharacter(GetCharacterRequest)returns(GetCharacterResponse);
+  rpc ListCharacter(ListCharacterRequest) returns(stream GetCharacterResponse);
+  rpc SubscribeSheet(stream SheetUpdate) returns (stream SheetUpdate);
+  rpc UpdateSheet(stream CharacterUpdateRequest) returns( stream CharacterUpdateResponse);
+  rpc DeleteSheet(GetCharacterRequest) returns (DeleteCharacterResponse);
+}
+
+
+
+
+message GetCharacterRequest{
+  uint32 character_id = 1;
+  uint32 table_id = 2;
+
+}
+
+message ListCharacterRequest{
+  uint32 table_id = 2;
+}
+
+message GetCharacterResponse{
+  Sheet sheet = 1;
+  string name = 2;
+  google.protobuf.Timestamp deleted_at = 3;
+}
+
+//Wrapper to abilities
+message AbilityList{
+  repeated Ability abilities = 1;
+}
+
+//Wrapper to Attack
+message AttackList{
+  repeated Attack attacks = 1;
+}
+
+//Wrapper to EquipamentItems
+message EquipmentItemList{
+  repeated EquipmentItem equipment_item = 1;
+}
+
+//Wraper to SKills
+//message SkillsMap{
+//  map<string, Skill> skills = 1;
+//}
+
+
+message CharacterUpdateRequest{
+  uint32 character_id = 1;
+  uint32 table_id = 2;
+  string character_name = 3;
+  Sheet sheet = 4;
+  google.protobuf.Timestamp expected_last_modfield = 100;
+}
+
+message CharacterUpdateResponse{
+  string characterName = 2;
+  Sheet sheet = 3;
+  google.protobuf.Timestamp last_modfield = 100;
+}
+
+message SheetUpdate{
+  uint32 characterID = 1;
+  string name = 2;
+  Sheet sheet = 13;
+  google.protobuf.Timestamp expected_last_modified = 100;
+
+  oneof updateAction{
+    Attributes new_attributes = 3;
+    AbilityList new_abilities = 4;
+    Armor new_armor = 5;
+    AttackList new_attacks = 6;
+    EquipmentItemList new_items = 7;
+    ClassAndLevel new_class_and_level = 8;
+    HpPoints new_hp_points = 9;
+    ManaPoints new_mana_points = 10;
+    CharacterInfo new_character_info = 11;
+  }
+  map<string, Skill> skills = 14;
+}
+
+message UpdateSheetResponse{
+  bool success = 1;
+  string message = 2;
+}
+
+
+message CreateCharacterRequest{
+  uint32 table_user_id = 1;
+ // uint32 table_User = 2;
+  string player_name = 3;
+  string character_name = 4;
+  enum SystemKey{
+    NONE = 0;
+    TORMENTA20 = 1;
+    DeD5e = 2;
+    GURPS = 3;
+  }
+
+  SystemKey system_key = 5;
+ // Sheet sheet_data = 6;
+}
+
+message CreateCharacterResponse{
+  string player_name = 1;
+  string character_name =2;
+  Sheet sheet_data = 3;
+  string system_key = 4;
+}
+
+message DeleteCharacterResponse{
+  string message_status = 1;
+  string message = 2;
+}

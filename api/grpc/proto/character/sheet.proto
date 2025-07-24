@@ -1,0 +1,93 @@
+syntax = "proto3";
+
+package character;
+
+option go_package = "pb/";
+
+import "google/protobuf/timestamp.proto";
+
+//Create a character sheet to use GRPC
+message Sheet{
+  Attributes attributes = 1;
+  repeated Ability abilities = 2;
+  Armor armor = 3;
+  repeated Attack attacks = 4;
+  repeated EquipmentItem equipment_items = 5;
+  ClassAndLevel class_and_level = 6;
+  HpPoints hp_points = 7;
+  ManaPoints mana_points = 8;
+  CharacterInfo character_info = 9;
+  map<string, Skill> skills = 10;
+  google.protobuf.Timestamp last_modified = 100;
+}
+
+message Attributes{
+  int32 strength = 1;
+  int32 dexterity = 2;
+  int32 constitution = 3;
+  int32 intelligence = 4;
+  int32 wisdom = 5;
+  int32 charisma = 6;
+}
+
+message Skill{
+  string default_base_attribute = 1;
+  string current_base_attribute = 2;
+  bool trained = 3;
+  int32 bonus = 4;
+  bool only_trained = 5;
+  bool armor_penalty = 6;
+  int32 other_bonus = 7;
+}
+
+message Ability{
+  string  name = 1;
+  string  description = 2;
+}
+
+message ManaPoints{
+  int32 actual = 1;
+  int32 max_mana = 2;
+  int32 temp_mana = 3;
+}
+
+message HpPoints{
+  int32 actual = 1;
+  int32 max_hp = 2;
+  int32 temp_hp = 3;
+}
+
+message EquipmentItem{
+  string  name = 1;
+  int32  amount = 2;
+  float  weight = 3;
+}
+
+message ClassAndLevel{
+  string class = 1;
+  int32 level = 2;
+}
+
+message Attack{
+  string name = 1;
+  string attack_test = 2;
+  string damage = 3;
+  string critical = 4;
+  string damage_type = 5;
+  string range = 6;
+}
+
+message CharacterInfo{
+  string deity = 1;
+  string notes = 2;
+  string origin = 3;
+  string race = 4;
+}
+
+message Armor{
+  int32 defense = 1;
+  bool dexterity_bonus = 2;
+  int32  armor_bonus = 3;
+  int32 shield_bonus = 4;
+  int32 other_bonus = 5;
+}
