@@ -4,6 +4,7 @@ import (
 	"github.com/GarotoCowboy/vttProject/api/handler"
 	"github.com/GarotoCowboy/vttProject/api/handler/tablehandler"
 	"github.com/GarotoCowboy/vttProject/api/handler/tableuserhandler"
+	"github.com/GarotoCowboy/vttProject/api/handler/uploadHandler"
 	"github.com/GarotoCowboy/vttProject/api/handler/userhandler"
 	_ "github.com/GarotoCowboy/vttProject/docs"
 	"github.com/gin-gonic/gin"
@@ -36,14 +37,17 @@ func initializeRoutes(router *gin.Engine) {
 		//
 		////TableUser Requests
 		v1.GET("/tableUser", tableuserhandler.GetTableUserHandler)
-		//v1.GET("/tablesUsers", userhandler.ListUsersHandler)
+		v1.GET("/tablesUsers", tableuserhandler.ListTableUsersHandler)
 		v1.POST("/tableUser", tableuserhandler.CreateTableUserHandler)
 		v1.DELETE("/tableUser", tableuserhandler.DeleteTableUserHandler)
-		//v1.PUT("/tableUser", userhandler.UpdateUserHandler)
+		//v1.PUT("/tableUser", table.UpdateUserHandler)
+
+		//v1.POST("/table/character",characterhandler.CreateCharacterHandler)
 	}
 
 	//utils
-	v1.POST("/util/upload/pdf", handler.UploadFilePDF)
+	v1.POST("/util/upload/pdf", uploadHandler.UploadFilePDF)
+	v1.POST("/util/upload/audio", uploadHandler.UploadFileMP3)
 
 	//Swagger
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

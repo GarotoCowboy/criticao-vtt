@@ -15,7 +15,7 @@ func Initializer() {
 	router := gin.Default()
 
 	initializeRoutes(router)
-	err := router.Run(":8080")
+	err := router.Run("localhost:8080")
 	if err != nil {
 		log.Fatal("Is not possible run server", err)
 	}
