@@ -1,6 +1,9 @@
 package userDTO
 
-import "fmt"
+import (
+	"fmt"
+	"gorm.io/gorm"
+)
 
 func ErrParamIsRequired(name, typ string) error {
 	return fmt.Errorf("param %s (type: %s) is required", name, typ)
@@ -8,12 +11,13 @@ func ErrParamIsRequired(name, typ string) error {
 
 // UserResponse User Response Body
 type UserResponse struct {
-	ID        uint   `json:"id"`
-	Firstname string `json:"firstname"`
-	Lastname  string `json:"lastname"`
-	Email     string `json:"email"`
-	Username  string `json:"username"`
-	ImageLink string `json:"imageLink,omitempty"`
+	ID         uint           `json:"id"`
+	Firstname  string         `json:"firstname"`
+	Lastname   string         `json:"lastname"`
+	Email      string         `json:"email"`
+	Username   string         `json:"username"`
+	ImageLink  string         `json:"imageLink,omitempty"`
+	Deleted_At gorm.DeletedAt `json:"deleted_at" gorm:"index"`
 }
 
 // ErrorResponse reports the error in the userDTO request
