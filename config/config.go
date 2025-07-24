@@ -42,3 +42,16 @@ func CreateImgFolder() error {
 
 	return nil
 }
+
+func CreateFileFolder() error {
+
+	if _, err := os.Stat("./files"); os.IsNotExist(err) {
+		logger.InfoF("files folder does not exist, creating...")
+		if err := os.Mkdir("./files", os.ModeDir); err != nil {
+			return fmt.Errorf("Error creating files folder: %v", err)
+		}
+		logger.InfoF("Create files folder successfully")
+	}
+
+	return nil
+}
