@@ -10,12 +10,13 @@
 ---
 
 ## 🧠 Objetivo
-Este projeto visa a criação de uma plataforma robusta para jogadores de RPG de mesa, servindo como um estudo prático e aprofundado nas seguintes áreas:
+Este projeto visa a criação de uma plataforma robusta para jogadores de RPG de mesa, servindo como um estudo prático e aprofundado nas seguintes tecnologias:
 - **Go (Golang)**: Desenvolvimento de APIs RESTful, concorrência, gRPC.
 - **PostgreSQL**: Modelagem de dados e interações com banco de dados relacional.
 - **React**: Desenvolvimento da interface do usuário (UI) da plataforma.
 - **Arquitetura de Software**: Aplicação de conceitos como arquitetura em camadas (Services, Handlers, DTOs).
 - **Ferramentas e ORMs**: Utilização de GORM para mapeamento objeto-relacional e Swagger para documentação de API.
+- **Protocol Buffers (gRPC)**: Definição de contratos de serviço para comunicação em tempo real.
 
 O projeto busca ser uma alternativa às plataformas existentes no mercado para RPG de mesa.
 
@@ -36,7 +37,17 @@ O sistema permitirá o gerenciamento de usuários, mesas de RPG e a relação en
 - **Associação Usuário-Mesa**: Adicionar e remover usuários de mesas, definindo seus papéis (ex: Jogador, Mestre).
 - **Listagem de Participantes**: Visualizar os usuários associados a uma mesa específica.
 
-*(Funcionalidades adicionais como chat em tempo real, rolagem de dados, fichas de personagem, e outras interações via gRPC estão planejadas para fases futuras do desenvolvimento)*.
+- ### Chat em tempo Real
+- **Create de Mensagens**: Criação e envio de mensagens bidirecional para usuários conectados em uma mesa, utilizando de pub/sub
+- ** List de Mensagens**: Lista todas as mensagens enviadas em uma mesa utilizando server streaming.
+- **Envio de Mensagens Privadas**: Usuários poderão enviar mensagens privadas para outros usuários em uma mesa
+
+- ### Personagem
+-**Criação e Gerenciamento**: Criação de fichas de personagem associadas a um sistema (atualmente Tormenta 20).
+-**Atualização em Tempo Real**: Atualização da ficha de personagem (atributos, perícias, etc.) com propagação instantânea para todos os clientes via streams bidirecionais.
+-**Lógica de Regras**: A arquitetura atual permite a implementação de regras de diferentes sistemas de RPG, com Tormenta 20 já implementado para o cálculo automático de bônus. A estrutura visa ser genérica para suportar D&D, GURPS, etc. no futuro.
+-  
+*(Funcionalidades adicionais como rolagem de dados, Tabuleiro, chat de video e outras interações via gRPC estão planejadas para fases futuras do desenvolvimento)*.
 
 ---
 
@@ -59,11 +70,11 @@ O sistema permitirá o gerenciamento de usuários, mesas de RPG e a relação en
 
 ---
 
-## 📋 Etapas do Projeto (Conforme README Original)
+## 📋 Etapas do Projeto
 - Desenvolvimento dos diagramas de caso de uso, diagrama de classe e diagrama entidade relacionamento.
 - Desenvolvimento das classes (models).
 - Desenvolvimento do banco de dados.
-- Implementar funcionalidades tais como GORM e SWAGGER.
+- Implementar funcionalidades tais como por exemplo GORM e SWAGGER.
 - Desenvolvimento das regras de negócio (services).
 - Desenvolvimento das funcionalidades que utilizarão gRPC.
 - Desenvolver a UI da plataforma.
