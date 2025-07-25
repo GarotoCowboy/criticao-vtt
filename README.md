@@ -43,9 +43,9 @@ O sistema permitirá o gerenciamento de usuários, mesas de RPG e a relação en
 - **Envio de Mensagens Privadas**: Usuários poderão enviar mensagens privadas para outros usuários em uma mesa
 
 - ### Personagem
--**Criação e Gerenciamento**: Criação de fichas de personagem associadas a um sistema (atualmente Tormenta 20).
--**Atualização em Tempo Real**: Atualização da ficha de personagem (atributos, perícias, etc.) com propagação instantânea para todos os clientes via streams bidirecionais.
--**Lógica de Regras**: A arquitetura atual permite a implementação de regras de diferentes sistemas de RPG, com Tormenta 20 já implementado para o cálculo automático de bônus. A estrutura visa ser genérica para suportar D&D, GURPS, etc. no futuro.
+- **Criação e Gerenciamento**: Criação de fichas de personagem associadas a um sistema (atualmente Tormenta 20).
+- **Atualização em Tempo Real**: Atualização da ficha de personagem (atributos, perícias, etc.) com propagação instantânea para todos os clientes via streams bidirecionais.
+- **Lógica de Regras**: A arquitetura atual permite a implementação de regras de diferentes sistemas de RPG, com Tormenta 20 já implementado para o cálculo automático de bônus. A estrutura visa ser genérica para suportar D&D, GURPS, etc. no futuro.
 -  
 *(Funcionalidades adicionais como rolagem de dados, Tabuleiro, chat de video e outras interações via gRPC estão planejadas para fases futuras do desenvolvimento)*.
 
