@@ -2,6 +2,7 @@ package tableUserDTO
 
 import (
 	"fmt"
+
 	"github.com/GarotoCowboy/vttProject/api/models/consts"
 	"gorm.io/gorm"
 )
@@ -32,6 +33,32 @@ type CreateTableUserRequest struct {
 	TableID uint        `json:"table_id"`
 	UserID  uint        `json:"user_id"`
 	Role    consts.Role `json:"role"`
+}
+
+type CreateTableUserInviteLinkRequest struct {
+	InviteLink string      `json:"invite_link"`
+	UserID     uint        `json:"user_id"`
+	Role       consts.Role `json:"role"`
+}
+
+func (r *CreateTableUserInviteLinkRequest) Validate() error {
+	if r.InviteLink == "" && r.UserID == 0 && r.Role == 0 {
+		return fmt.Errorf("request body is empty")
+	}
+
+	if r.InviteLink == "" {
+		return ErrParamIsRequired("invite_link", "string")
+	}
+
+	if r.UserID == 0 {
+		return ErrParamIsRequired("user_id", "uint")
+	}
+
+	if r.Role == 0 {
+		return ErrParamIsRequired("role", "uint")
+	}
+
+	return nil
 }
 
 func (r *CreateTableUserRequest) Validate() error {

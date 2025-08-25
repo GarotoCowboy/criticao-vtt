@@ -2,6 +2,7 @@ package tableUser
 
 import (
 	"errors"
+
 	"github.com/GarotoCowboy/vttProject/api/dto/tableUserDTO"
 	"github.com/GarotoCowboy/vttProject/api/models"
 	"gorm.io/gorm"
@@ -21,6 +22,27 @@ func CreateTableUser(db *gorm.DB, req tableUserDTO.CreateTableUserRequest) (mode
 	}
 
 	//Save User
+	if err := db.Create(&tableUser).Error; err != nil {
+		return models.TableUser{}, err
+	}
+	return tableUser, nil
+}
+
+func CreateTableUserByInviteLink(db *gorm.DB, req tableUserDTO.CreateTableUserInviteLinkRequest) (models.TableUser, error) {
+	if err := req.Validate(); err != nil {
+		return models.TableUser{}, err
+	}
+
+	var table = models.Table{}
+	if err := db.Where("invite_link = ?", req.InviteLink).First(&table).Error; err != nil {
+		return models.TableUser{}, err
+	}
+
+	var tableUser = models.TableUser{
+		UserID:  req.UserID,
+		TableID: table.ID,
+		Role:    req.Role,
+	}
 	if err := db.Create(&tableUser).Error; err != nil {
 		return models.TableUser{}, err
 	}

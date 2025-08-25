@@ -39,6 +39,7 @@ func initializeRoutes(router *gin.Engine) {
 		v1.GET("/tableUser", tableuserhandler.GetTableUserHandler)
 		v1.GET("/tablesUsers", tableuserhandler.ListTableUsersHandler)
 		v1.POST("/tableUser", tableuserhandler.CreateTableUserHandler)
+		v1.POST("/tableUser/inviteLink", tableuserhandler.CreateTableUserByInviteLinkHandler)
 		v1.DELETE("/tableUser", tableuserhandler.DeleteTableUserHandler)
 		//v1.PUT("/tableUser", table.UpdateUserHandler)
 
