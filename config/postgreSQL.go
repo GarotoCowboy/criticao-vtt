@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+
 	"github.com/GarotoCowboy/vttProject/api/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -84,7 +85,13 @@ func initializePostgreSQL() (*gorm.DB, error) {
 		&models.Table{},
 		&models.TableUser{},
 		&models.Character{},
-		&models.ChatMessage{})
+		&models.ChatMessage{},
+		&models.Scene{},
+		&models.Image{},
+		&models.PlacedImage{},
+		&models.PlacedToken{},
+		&models.Token{},
+		&models.Bar{})
 	if err != nil {
 		logger.ErrorF("postgres  auto-migrating error: %v", err)
 		return nil, err
