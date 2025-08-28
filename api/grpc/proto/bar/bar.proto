@@ -1,0 +1,87 @@
+syntax = "proto3";
+
+package bar;
+
+
+option go_package = "/pb";
+
+service BarService{
+  rpc CreateBar(CreateBarRequest) returns (CreateBarResponse);
+  rpc EditBar(EditBarRequest) returns (EditBarResponse);
+  rpc DeleteBar(DeleteBarRequest) returns (DeleteBarResponse);
+  rpc GetBarsForToken(GetBarForTokenRequest) returns (GetBarsForTokenResponse);
+}
+
+
+message Bar{
+  uint64 bar_id = 1;
+  uint64 token_id = 2;
+  string name = 3;
+  int32 value = 4;
+  int32 max_value = 5;
+  string color = 6;
+}
+
+message CreateBarRequest{
+  uint64 token_id = 1;
+  string name = 2;
+  int32 value = 3;
+  int32 max_value = 4;
+  string color = 5;
+
+}
+
+message CreateBarResponse{
+  Bar bar = 1;
+}
+
+message EditBarRequest{
+  uint64 bar_id = 2;
+  string name = 3;
+  int32 value = 4;
+  int32 max_value = 5;
+  string color = 6;
+}
+
+message EditBarResponse{
+  Bar bar = 1;
+}
+
+message DeleteBarRequest{
+  uint64 bar_id = 1;
+}
+
+message DeleteBarResponse{
+  bool success = 1;
+}
+
+message GetBarForTokenRequest{
+uint64 token_id = 1;
+}
+
+message GetBarsForTokenResponse{
+repeated Bar bars = 1;
+}
+
+//todo: Event messages to sync:
+
+message BarValuesUpdated{
+  Bar bar = 1;
+}
+
+message BarCreated{
+  Bar bar = 2;
+}
+
+message barDeleted{
+  uint64 bar_id = 1;
+  uint64 token_id = 2;
+}
+
+message getBarsForToken{
+  getBarsForToken get_bars = 1;
+}
+
+message barUpdated{
+Bar bar = 1;
+}

@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package sync;
+
+option go_package = "/pb";
+
+import "bar/bar.proto";
+import "token/token.proto";
+import "scene/scene.proto";
+
+service SyncService{
+  rpc SyncScene(stream SyncRequest) returns (stream SyncResponse);
+}
+
+message SyncRequest{
+  uint64 scene_id = 1;
+  string auth_token =2;
+
+}
+
+// Add the actions here to sync.
+message SyncResponse{
+  uint64 scene_id = 1;
+
+  oneof action{
+    token.TokenPositionUpdated position_updated = 2;
+    token.TokenCreated tokenCreated = 3;
+    token.tokenDeleted tokenDeleted = 4;
+    token.tokenUpdated tokenUpdated = 5;
+
+
+    bar.BarValuesUpdated bar_value_updated = 6;
+    bar.BarCreated bar_created = 7;
+    bar.barDeleted bar_deleted = 8;
+    bar.barUpdated barUpdate = 9;
+
+    scene.SceneCreated sceneCreated = 10;
+    scene.SceneUpdated sceneUpdated = 11;
+    scene.SceneDeleted sceneDeleted = 12;
+  }
+
+}

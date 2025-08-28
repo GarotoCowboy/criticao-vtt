@@ -1,0 +1,74 @@
+syntax = "proto3";
+
+package scene;
+
+option go_package = "/pb";
+
+import "google/protobuf/field_mask.proto";
+
+service SceneService{
+  rpc CreateScene(CreateSceneRequest) returns(CreateSceneResponse);
+  rpc EditScene(EditSceneRequest) returns (EditSceneResponse);
+  rpc DeleteScene(DeleteSceneRequest) returns (DeleteSceneResponse);
+  rpc ListAllScenesForTable(ListAllScenesRequest) returns(ListAllScenesResponse);
+}
+
+message Scene{
+  uint64 scene_id = 1;
+  uint64 table_id = 2;
+  string name = 3;
+  uint32 width = 4;
+  uint32 height = 5;
+}
+
+message CreateSceneRequest{
+  uint64 table_id = 1;
+  string name = 2;
+  uint32 width = 3;
+  uint32 height = 4;
+}
+
+message CreateSceneResponse{
+  Scene scene = 1;
+}
+
+message EditSceneRequest{
+  Scene scene = 1;
+
+  google.protobuf.FieldMask update_mask = 2;
+}
+
+message EditSceneResponse{
+  Scene scene = 1;
+}
+
+message DeleteSceneRequest{
+  uint64 scene_id = 1;
+}
+
+message DeleteSceneResponse{
+  bool success = 1;
+}
+
+message ListAllScenesRequest{
+  uint64 table_id = 1;
+}
+
+message ListAllScenesResponse{
+ repeated Scene scene = 1;
+}
+
+//todo: Event Messages to sync
+
+message SceneCreated{
+  Scene scene = 1;
+}
+
+message SceneUpdated {
+  Scene scene = 2;
+}
+
+message SceneDeleted{
+  uint64 scene_id = 1;
+}
+
