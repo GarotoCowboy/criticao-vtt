@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-func UploadPDFFile(file *multipart.FileHeader, tableID, username, messageUUID string) (string, string, error) {
+func UploadMessagePDFFile(file *multipart.FileHeader, tableID, username, messageUUID string) (string, string, error) {
 
 	if username == "" || messageUUID == "" || tableID == "" {
 		return "", "", fmt.Errorf("username, messageUUID and tableID are required")
@@ -25,7 +25,7 @@ func UploadPDFFile(file *multipart.FileHeader, tableID, username, messageUUID st
 
 	normalized := strings.ReplaceAll(strings.ToLower(username), ".", "_")
 	fileName := fmt.Sprintf("%s_%s.pdf", normalized, messageUUID)
-	dirPath := fmt.Sprintf("./files/table_%s", tableID)
+	dirPath := fmt.Sprintf("vttData/files/table_%s", tableID)
 
 	if err := os.MkdirAll(dirPath, os.ModePerm); err != nil {
 		return "", "", fmt.Errorf("failed to create directory: %v", err)
