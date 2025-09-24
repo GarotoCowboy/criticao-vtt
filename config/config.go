@@ -2,8 +2,9 @@ package config
 
 import (
 	"fmt"
-	"gorm.io/gorm"
 	"os"
+
+	"gorm.io/gorm"
 )
 
 var (
@@ -32,12 +33,12 @@ func GetLogger(p string) *Logger {
 
 func CreateImgFolder() error {
 
-	if _, err := os.Stat("./img"); os.IsNotExist(err) {
-		logger.InfoF("img folder does not exist, creating...")
-		if err := os.Mkdir("./img", os.ModeDir); err != nil {
+	if _, err := os.Stat("vttData/libraryImg"); os.IsNotExist(err) {
+		logger.InfoF("libraryImg folder does not exist, creating...")
+		if err := os.MkdirAll("vttData/libraryImg", os.ModeDir); err != nil {
 			return fmt.Errorf("Error creating image folder: %v", err)
 		}
-		logger.InfoF("Create img folder successfully")
+		logger.InfoF("Create libraryImg folder successfully")
 	}
 
 	return nil
@@ -45,9 +46,9 @@ func CreateImgFolder() error {
 
 func CreateFileFolder() error {
 
-	if _, err := os.Stat("./files"); os.IsNotExist(err) {
+	if _, err := os.Stat("vttData/files"); os.IsNotExist(err) {
 		logger.InfoF("files folder does not exist, creating...")
-		if err := os.Mkdir("./files", os.ModeDir); err != nil {
+		if err := os.MkdirAll("vttData/files", os.ModeDir); err != nil {
 			return fmt.Errorf("Error creating files folder: %v", err)
 		}
 		logger.InfoF("Create files folder successfully")
