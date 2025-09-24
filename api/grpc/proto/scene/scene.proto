@@ -5,11 +5,14 @@ package scene;
 option go_package = "/pb";
 
 import "google/protobuf/field_mask.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
 
 service SceneService{
   rpc CreateScene(CreateSceneRequest) returns(CreateSceneResponse);
   rpc EditScene(EditSceneRequest) returns (EditSceneResponse);
-  rpc DeleteScene(DeleteSceneRequest) returns (DeleteSceneResponse);
+  rpc DeleteScene(DeleteSceneRequest) returns (google.protobuf.Empty);
   rpc ListAllScenesForTable(ListAllScenesRequest) returns(ListAllScenesResponse);
 }
 
@@ -19,6 +22,18 @@ message Scene{
   string name = 3;
   uint32 width = 4;
   uint32 height = 5;
+  string background_image_path = 6;
+  google.protobuf.BoolValue is_visible = 7;
+  string background_color = 8;
+  uint64 grid_cell_distance = 9;
+  GridType grid_type = 10;
+  google.protobuf.Timestamp created_at = 11;
+  google.protobuf.Timestamp updated_at = 12;
+}
+
+enum GridType{
+  SQUARE = 0;
+  HEXAGON = 1;
 }
 
 message CreateSceneRequest{
@@ -26,6 +41,10 @@ message CreateSceneRequest{
   string name = 2;
   uint32 width = 3;
   uint32 height = 4;
+  string background_image_path = 5;
+  string background_color = 6;
+  uint64 grid_cell_distance = 7;
+  GridType grid_type = 8;
 }
 
 message CreateSceneResponse{
@@ -35,7 +54,7 @@ message CreateSceneResponse{
 message EditSceneRequest{
   Scene scene = 1;
 
-  google.protobuf.FieldMask update_mask = 2;
+  google.protobuf.FieldMask mask = 2;
 }
 
 message EditSceneResponse{
@@ -44,18 +63,22 @@ message EditSceneResponse{
 
 message DeleteSceneRequest{
   uint64 scene_id = 1;
+  uint64 table_id = 2;
 }
 
 message DeleteSceneResponse{
-  bool success = 1;
+ google.protobuf.Empty empty = 1;
 }
 
 message ListAllScenesRequest{
   uint64 table_id = 1;
+  uint32 page_size = 2;
+  string page_token = 3;
 }
 
 message ListAllScenesResponse{
  repeated Scene scene = 1;
+ string next_page_token = 2;
 }
 
 //todo: Event Messages to sync
