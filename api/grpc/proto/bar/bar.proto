@@ -12,6 +12,8 @@ service BarService{
   rpc GetBarsForToken(GetBarForTokenRequest) returns (GetBarsForTokenResponse);
 }
 
+import "google/protobuf/field_mask.proto";
+
 
 message Bar{
   uint64 bar_id = 1;
@@ -36,11 +38,10 @@ message CreateBarResponse{
 }
 
 message EditBarRequest{
-  uint64 bar_id = 2;
-  string name = 3;
-  int32 value = 4;
-  int32 max_value = 5;
-  string color = 6;
+  Bar bar = 1;
+
+  google.protobuf.FieldMask mask = 2;
+
 }
 
 message EditBarResponse{
@@ -49,18 +50,22 @@ message EditBarResponse{
 
 message DeleteBarRequest{
   uint64 bar_id = 1;
+  uint64 token_id = 2;
+
 }
 
 message DeleteBarResponse{
   bool success = 1;
+  string message_status = 2;
+  string message = 3;
 }
 
 message GetBarForTokenRequest{
-uint64 token_id = 1;
+  uint64 token_id = 1;
 }
 
 message GetBarsForTokenResponse{
-repeated Bar bars = 1;
+  repeated Bar bars = 1;
 }
 
 //todo: Event messages to sync:
@@ -83,5 +88,5 @@ message getBarsForToken{
 }
 
 message barUpdated{
-Bar bar = 1;
+  Bar bar = 1;
 }
