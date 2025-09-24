@@ -4,34 +4,13 @@ import (
 	"github.com/GarotoCowboy/vttProject/api/grpc/proto/chat/pb"
 	"github.com/GarotoCowboy/vttProject/api/models"
 	"github.com/GarotoCowboy/vttProject/api/models/consts"
-	"github.com/GarotoCowboy/vttProject/config"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
-	"gorm.io/gorm"
 	"io"
-	"sync"
 	"time"
 )
-
-type ChatService struct {
-	pb.UnimplementedChatServer
-	Db                 *gorm.DB
-	Logger             *config.Logger
-	mu                 sync.RWMutex
-	publicSubscribers  map[uint]map[string]pb.Chat_SendMessageServer
-	privateSubscribers map[uint]map[uint]map[string]pb.Chat_SendPrivateMessageServer
-}
-
-func NewChatService(db *gorm.DB, logger *config.Logger) *ChatService {
-	return &ChatService{
-		Db:                 db,
-		Logger:             logger,
-		publicSubscribers:  make(map[uint]map[string]pb.Chat_SendMessageServer),
-		privateSubscribers: make(map[uint]map[uint]map[string]pb.Chat_SendPrivateMessageServer),
-	}
-}
 
 // SendMessage sends a Message at table using pub/sub
 func (s *ChatService) SendMessage(stream grpc.BidiStreamingServer[pb.ChatMessageRequest, pb.ChatMessageResponse]) error {
