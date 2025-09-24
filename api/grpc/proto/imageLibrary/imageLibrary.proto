@@ -1,0 +1,96 @@
+syntax = "proto3";
+
+package image_library;
+
+option go_package = "/pb";
+
+import "google/protobuf/field_mask.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+service ImageLibraryService{
+  rpc UploadImage(stream UploadImageRequest) returns (UploadImageResponse);
+  rpc EditImage(EditImageRequest) returns(Image);
+  rpc DeleteImage(DeleteImageRequest) returns (google.protobuf.Empty);
+  rpc ListImages(ListImagesRequest) returns (ListImagesResponse);
+}
+
+message Image{
+  uint64 table_id = 1;
+  uint64 image_id = 2;
+  string image_url = 3;
+  string name = 4;
+  uint32 width = 5;
+  uint32 height = 6;
+  string content_type = 7;
+  string checksum = 8;
+  google.protobuf.Timestamp created_at = 9;
+  google.protobuf.Timestamp updated_at = 10;
+}
+
+//Upload Messages
+message UploadImageRequest{
+  oneof msg {
+    UploadInit init = 1;
+    UploadChunk chunk = 2;
+  }
+}
+
+message UploadInit{
+  uint64 table_id = 1;
+  string name = 2;
+  string content_type = 3;
+}
+
+message UploadChunk{
+  bytes data = 1;
+}
+
+message UploadImageResponse{
+  Image image = 1;
+}
+
+//Edit Messages
+message EditImageRequest{
+  Image image = 1;
+  google.protobuf.FieldMask mask = 2;
+}
+
+//Delete Message
+
+message DeleteImageRequest{
+  uint64 image_id = 1;
+  uint64 table_id = 2;
+}
+
+//List Messages
+message ListImagesRequest{
+  uint64 table_id = 1;
+  uint32 page_size = 2;
+  string page_token = 3;
+}
+
+
+message ListImagesResponse{
+  repeated Image images = 1;
+  string next_page_token =2;
+}
+
+//todo:Event Messages to sync
+
+message ImageUploaded{
+  Image image = 1;
+}
+
+message ImageUpdated{
+  Image image = 1;
+}
+
+message ImageListed{
+  repeated Image image = 1;
+}
+
+message ImageDeleted{
+  uint64 image_id = 1;
+  uint64 table_id = 2;
+}
