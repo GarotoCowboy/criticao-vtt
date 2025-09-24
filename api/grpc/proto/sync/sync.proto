@@ -7,6 +7,7 @@ option go_package = "/pb";
 import "bar/bar.proto";
 import "token/token.proto";
 import "scene/scene.proto";
+import "imageLibrary/imageLibrary.proto";
 
 service SyncService{
   rpc SyncScene(stream SyncRequest) returns (stream SyncResponse);
@@ -37,6 +38,11 @@ message SyncResponse{
     scene.SceneCreated sceneCreated = 10;
     scene.SceneUpdated sceneUpdated = 11;
     scene.SceneDeleted sceneDeleted = 12;
+
+    image_library.ImageUploaded imageUploaded = 13;
+    image_library.ImageUpdated imageUpdated = 14;
+    image_library.ImageListed imageListed = 15;
+    image_library.ImageDeleted imageDeleted = 16;
   }
 
 }

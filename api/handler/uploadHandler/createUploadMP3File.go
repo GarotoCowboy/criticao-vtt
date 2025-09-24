@@ -21,7 +21,7 @@ func UploadFileMP3(ctx *gin.Context) {
 		return
 	}
 
-	filePath, fileName, err := upload.UploadMP3File(file, tableID, username, messageUUID)
+	filePath, fileName, err := upload.UploadMessageMP3File(file, tableID, username, messageUUID)
 	if err != nil {
 		handler.GetHandlerLogger().ErrorF("error validating upload: %v", err)
 		handler.SendError(ctx, http.StatusBadRequest, err.Error())

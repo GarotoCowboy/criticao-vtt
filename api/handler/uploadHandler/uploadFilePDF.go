@@ -2,10 +2,11 @@ package uploadHandler
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/GarotoCowboy/vttProject/api/handler"
 	"github.com/GarotoCowboy/vttProject/api/service/upload"
 	"github.com/gin-gonic/gin"
-	"net/http"
 )
 
 func UploadFilePDF(ctx *gin.Context) {
@@ -18,7 +19,7 @@ func UploadFilePDF(ctx *gin.Context) {
 		handler.SendError(ctx, http.StatusBadRequest, "PDF file is required")
 	}
 
-	filepath, filename, err := upload.UploadPDFFile(file, tableID, username, messageUUID)
+	filepath, filename, err := upload.UploadMessagePDFFile(file, tableID, username, messageUUID)
 	if err != nil {
 		handler.SendError(ctx, http.StatusInternalServerError, err.Error())
 		return

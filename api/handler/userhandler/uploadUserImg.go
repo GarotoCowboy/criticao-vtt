@@ -18,7 +18,7 @@ func UploadUserImg(ctx *gin.Context) {
 		return
 	}
 
-	//Validate type of img to PNG or JPEG
+	//Validate type of libraryImg to PNG or JPEG
 	contentType := file.Header.Get("Content-Type")
 	if contentType != "image/png" && contentType != "image/jpeg" {
 		handler.GetHandlerLogger().ErrorF("invalid image type: %v ", err)
@@ -26,14 +26,14 @@ func UploadUserImg(ctx *gin.Context) {
 		return
 	}
 
-	//Validate with img with max of 5mb
+	//Validate with libraryImg with max of 5mb
 	if file.Size > 5<<20 {
 		handler.GetHandlerLogger().ErrorF("Image too large, exceded limit: %d bytes", file.Size)
 		handler.SendError(ctx, http.StatusBadRequest, "exceed limit")
 		return
 	}
 
-	filePath := "./img/" + file.Filename
+	filePath := "./libraryImg/" + file.Filename
 
 	//Upload the file to specific folder
 	if err := ctx.SaveUploadedFile(file, filePath); err != nil {

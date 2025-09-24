@@ -29,7 +29,7 @@ func ListTableUsersHandler(ctx *gin.Context) {
 		return
 	}
 
-	var responses = []tableUserDTO.TableUserResponse{}
+	var responses []tableUserDTO.TableUserResponse
 
 	for _, tableU := range tableUsers {
 		var resp = tableUserDTO.TableUserResponse{
