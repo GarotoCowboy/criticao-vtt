@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-func UploadMP3File(file *multipart.FileHeader, tableID, username, messageUUID string) (string, string, error) {
+func UploadMessageMP3File(file *multipart.FileHeader, tableID, username, messageUUID string) (string, string, error) {
 
 	if username == "" || messageUUID == "" || tableID == "" {
 		return "", "", fmt.Errorf("username,messageUUID and tableID are required")
@@ -24,7 +24,7 @@ func UploadMP3File(file *multipart.FileHeader, tableID, username, messageUUID st
 	}
 
 	normalized := strings.ReplaceAll(strings.ToLower(username), ".", "_")
-	dirPath := fmt.Sprintf("./files/table_%s/chat", tableID)
+	dirPath := fmt.Sprintf("vttData/files/table_%s/chat", tableID)
 
 	if err := os.MkdirAll(dirPath, os.ModePerm); err != nil {
 		return "", "", fmt.Errorf("failed to create directory: %v", err)
