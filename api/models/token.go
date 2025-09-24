@@ -6,7 +6,7 @@ import (
 
 type Token struct {
 	gorm.Model
-	Name     string `json:"name"`
+	Name     string `json:"name" gorm:"not null"`
 	ImageURL string `json:"image_url"`
 	Bars     []*Bar `json:"bars" gorm:"foreignkey:TokenID"`
 
