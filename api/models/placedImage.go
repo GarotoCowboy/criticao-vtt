@@ -17,4 +17,8 @@ type PlacedImage struct {
 	Scene   *Scene `json:"scene" gorm:"constraint:OnUpdate:CASCADE"`
 
 	LayerType consts.LayerType `json:"layer_type"`
+	Rotation  int              `json:"rotation" gorm:"not null;default:0"`
+
+	Width  uint `json:"width" gorm:"not null"`
+	Height uint `json:"height" gorm:"not null"`
 }

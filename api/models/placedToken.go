@@ -9,11 +9,12 @@ type PlacedToken struct {
 	SceneID uint  `json:"scene_id" gorm:"not null"`
 	Scene   Scene `gorm:"foreignKey:SceneID"`
 
-	PosX uint `json:"posX" gorm:"not null"`
-	PosY uint `json:"posY" gorm:"not null"`
+	PosX uint `json:"posX" gorm:"not null;default:0"`
+	PosY uint `json:"posY" gorm:"not null;default:0"`
 
-	Width  uint `json:"width" gorm:"not null"`
-	Height uint `json:"height" gorm:"not null"`
+	Size int `json:"size" gorm:"not null;default:1"`
 
-	LayerType consts.LayerType `json:"layer_type"`
+	LayerType consts.LayerType `json:"layer_type" gorm:"not null;default:1"`
+
+	Rotation int `json:"rotation" gorm:"not null;default:0"`
 }
