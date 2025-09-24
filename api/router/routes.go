@@ -2,6 +2,7 @@ package router
 
 import (
 	"github.com/GarotoCowboy/vttProject/api/handler"
+	"github.com/GarotoCowboy/vttProject/api/handler/gameHandler"
 	"github.com/GarotoCowboy/vttProject/api/handler/tablehandler"
 	"github.com/GarotoCowboy/vttProject/api/handler/tableuserhandler"
 	"github.com/GarotoCowboy/vttProject/api/handler/uploadHandler"
@@ -42,6 +43,9 @@ func initializeRoutes(router *gin.Engine) {
 		v1.POST("/tableUser/inviteLink", tableuserhandler.CreateTableUserByInviteLinkHandler)
 		v1.DELETE("/tableUser", tableuserhandler.DeleteTableUserHandler)
 		//v1.PUT("/tableUser", table.UpdateUserHandler)
+
+		//gameService
+		v1.POST("/:tableUser/rollDice", gameHandler.RollDiceHandler)
 
 		//v1.POST("/table/character",characterhandler.CreateCharacterHandler)
 	}
