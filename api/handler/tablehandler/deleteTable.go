@@ -1,12 +1,13 @@
 package tablehandler
 
 import (
+	"net/http"
+	"strconv"
+
 	"github.com/GarotoCowboy/vttProject/api/dto/tableDTO"
 	"github.com/GarotoCowboy/vttProject/api/handler"
 	tableService "github.com/GarotoCowboy/vttProject/api/service/table"
 	"github.com/gin-gonic/gin"
-	"net/http"
-	"strconv"
 )
 
 // @BasePath /api/v1
@@ -40,6 +41,7 @@ func DeleteTableHandler(ctx *gin.Context) {
 	tableData, err := tableService.DeleteTable(handler.GetHandlerDB(), uint(id))
 	if err != nil {
 		handler.SendError(ctx, http.StatusBadRequest, err.Error())
+		return
 	}
 
 	resp := tableDTO.TableResponse{

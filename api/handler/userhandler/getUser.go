@@ -1,12 +1,13 @@
 package userhandler
 
 import (
+	"net/http"
+	"strconv"
+
 	"github.com/GarotoCowboy/vttProject/api/dto/userDTO"
 	"github.com/GarotoCowboy/vttProject/api/handler"
 	userService "github.com/GarotoCowboy/vttProject/api/service/user"
 	"github.com/gin-gonic/gin"
-	"net/http"
-	"strconv"
 )
 
 // @BasePath /api/v1
@@ -38,9 +39,9 @@ func GetUserHandler(ctx *gin.Context) {
 	}
 
 	userData, err := userService.GetUser(handler.GetHandlerDB(), uint(id))
-
 	if err != nil {
 		handler.SendError(ctx, http.StatusBadRequest, err.Error())
+		return
 	}
 
 	resp := userDTO.UserResponse{

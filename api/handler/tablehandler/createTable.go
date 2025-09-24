@@ -1,11 +1,12 @@
 package tablehandler
 
 import (
+	"net/http"
+
 	tableDTO "github.com/GarotoCowboy/vttProject/api/dto/tableDTO"
 	"github.com/GarotoCowboy/vttProject/api/handler"
 	tableService "github.com/GarotoCowboy/vttProject/api/service/table"
 	"github.com/gin-gonic/gin"
-	"net/http"
 )
 
 // @BasePath /api/v1
@@ -33,7 +34,7 @@ func CreateTableHandler(ctx *gin.Context) {
 
 	table, err := tableService.CreateTable(handler.GetHandlerDB(), request)
 	if err != nil {
-		handler.GetHandlerLogger().ErrorF("Error creating user: %v", err.Error())
+		handler.GetHandlerLogger().ErrorF("Error creating table: %v", err.Error())
 		handler.SendError(ctx, http.StatusInternalServerError, err.Error())
 		return
 	}
