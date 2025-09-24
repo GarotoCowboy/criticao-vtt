@@ -1,85 +1,100 @@
-syntax = "proto3";
+  syntax = "proto3";
 
-package token;
+  package token;
 
-option go_package = "/pb";
+  option go_package = "/pb";
 
-import "google/protobuf/field_mask.proto";
+  import "google/protobuf/field_mask.proto";
 
-service TokenService{
-  rpc MoveToken(MoveTokenRequest) returns (MoveTokenResponse);
-  rpc CreateToken(CreateTokenRequest) returns (CreateTokenResponse);
-  rpc EditToken(EditTokenRequest) returns (EditTokenResponse);
-  rpc DeleteToken(DeleteTokenRequest) returns (DeleteTokenResponse);
-}
+  service TokenService{
+    rpc MoveToken(MoveTokenRequest) returns (MoveTokenResponse);
+    rpc CreateToken(CreateTokenRequest) returns (CreateTokenResponse);
+    rpc EditToken(EditTokenRequest) returns (EditTokenResponse);
+    rpc DeleteToken(DeleteTokenRequest) returns (DeleteTokenResponse);
+    rpc ListAllTokenInTable(ListTokenRequest) returns (ListTokenResponse);
+  }
 
-message Token{
+  message Token{
+    uint64 token_id = 1;
+    uint64 table_id = 2;
+    string name = 3;
+    string image_url = 4;
+  }
+
+  message CreateTokenRequest{
+    uint64 table_id = 2;
+    string name = 3;
+    string image_url = 4;
+
+
+  }
+
+  message CreateTokenResponse{
+    Token token = 1;
+  }
+
+  message MoveTokenRequest{
+    uint64 token_id = 1;
+    uint64 scene_id = 2;
+    uint32 pos_x = 3;
+    uint32 pos_y = 4;
+
+  }
+
+  message MoveTokenResponse{
+    bool success = 1;
+  }
+
+  message EditTokenRequest{
+   Token token = 1;
+
+    google.protobuf.FieldMask mask = 2;
+  }
+
+  message DeleteTokenRequest{
   uint64 token_id = 1;
   uint64 table_id = 2;
-  string name = 3;
-  string image_url = 4;
-}
+  }
 
-message CreateTokenRequest{
-  uint64 table_id = 2;
-  string name = 3;
-  string image_url = 4;
+  message DeleteTokenResponse{
+    bool success = 1;
+    string message_status = 2;
+    string message = 3;
+  }
 
+  message EditTokenResponse{
+    Token token = 1;
+  }
 
-}
+  message ListTokenRequest{
+    uint64 table_id = 1;
+  }
 
-message CreateTokenResponse{
-  Token token = 1;
-}
+  message ListTokenResponse{
+    repeated Token token = 1;
+  }
 
-message MoveTokenRequest{
-  uint64 token_id = 1;
-  uint64 scene_id = 2;
-  uint32 pos_x = 3;
-  uint32 pos_y = 4;
+  //todo:Event Messages to sync
 
-}
+  message TokenPositionUpdated{
+    uint64 token_id = 1;
+    uint32 pos_x = 2;
+    uint32 pos_y = 3;
+  }
 
-message MoveTokenResponse{
-  bool success = 1;
-}
+  message TokenCreated{
+    Token token = 1;
+  }
 
-message EditTokenRequest{
- Token token = 1;
+  message tokenUpdated{
+    Token token = 1;
+  }
 
-  google.protobuf.FieldMask mask = 2;
-}
+  message tokenDeleted{
+    uint64 table_id = 1;
+    uint64 token_id = 2;
+  }
 
-message DeleteTokenRequest{
-uint64 token_id = 1;
-uint64 table_id = 2;
-}
-
-message DeleteTokenResponse{
-  bool success = 1;
-}
-
-message EditTokenResponse{
-  Token token = 1;
-}
-
-//todo:Event Messages to sync
-
-message TokenPositionUpdated{
-  uint64 token_id = 1;
-  uint32 pos_x = 2;
-  uint32 pos_y = 3;
-}
-
-message TokenCreated{
-  Token token = 1;
-}
-
-message tokenUpdated{
-  Token token = 1;
-}
-
-message tokenDeleted{
-  uint64 table_id = 1;
-  uint64 token_id = 2;
-}
+  message tokenListed{
+    repeated Token token = 1;
+  }
