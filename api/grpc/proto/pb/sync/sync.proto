@@ -1,0 +1,61 @@
+syntax = "proto3";
+
+package sync;
+
+option go_package = "github.com/GarotoCowboy/vttProject/api/grpc/pb/sync;sync";
+
+import "pb/bar/bar.proto";
+import "pb/token/token.proto";
+import "pb/scene/scene.proto";
+import "pb/imageLibrary/imageLibrary.proto";
+import "pb/placedToken/placedToken.proto";
+
+service SyncService{
+  rpc Sync(stream SyncRequest) returns (stream SyncResponse);
+}
+
+message SyncRequest{
+  uint64 scene_id = 1;
+  uint64 table_id = 2;
+  string auth_token = 3;
+
+}
+
+// Add the actions here to sync.
+message SyncResponse{
+  uint64 scene_id = 1;
+  uint64 table_id = 2;
+
+  oneof action{
+    //todo SCENE SCOPE
+
+    //placedToken
+    placedToken.PlacedTokenCreated placed_token_created = 3;
+    placedToken.PlacedTokenUpdated placed_token_updated = 4;
+    placedToken.PlacedTokenMoved placed_token_moved = 5;
+    placedToken.PlacedTokenDeleted placed_token_deleted = 6;
+
+    //todo TABLE SCOPE
+
+    //scene
+    scene.SceneCreated scene_created = 7;
+    scene.SceneUpdated scene_updated = 8;
+    scene.SceneDeleted scene_deleted = 9;
+
+    //token
+    token.TokenCreated token_created = 10;
+    token.TokenDeleted token_deleted = 11;
+    token.TokenUpdated token_updated = 12;
+
+    //bar
+    bar.BarValuesUpdated bar_value_updated = 13;
+    bar.BarCreated bar_created = 14;
+    bar.BarDeleted bar_deleted = 15;
+    bar.BarUpdated bar_update = 16;
+
+    //imageLibrary
+    image_library.ImageUploaded image_uploaded = 17;
+    image_library.ImageUpdated image_updated = 18;
+    image_library.ImageDeleted image_deleted = 19;
+  }
+}
