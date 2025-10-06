@@ -1,13 +1,13 @@
 package bar
 
 import (
-	"github.com/GarotoCowboy/vttProject/api/grpc/proto/bar/pb"
+	"github.com/GarotoCowboy/vttProject/api/grpc/pb/bar"
 	"github.com/GarotoCowboy/vttProject/config"
 	"gorm.io/gorm"
 )
 
 type BarService struct {
-	pb.UnimplementedBarServiceServer
+	bar.UnimplementedBarServiceServer
 	DB     *gorm.DB
 	Logger *config.Logger
 }
