@@ -2,12 +2,14 @@ package main
 
 import (
 	"github.com/GarotoCowboy/vttProject/api/grpc/server"
+	"github.com/GarotoCowboy/vttProject/api/grpc/service/sync/broker"
 	"github.com/GarotoCowboy/vttProject/api/router"
 	"github.com/GarotoCowboy/vttProject/config"
 )
 
 var (
-	logger *config.Logger
+	logger    *config.Logger
+	AppBroker *broker.Broker
 )
 
 // @title VTT API
@@ -29,11 +31,13 @@ func main() {
 		logger.ErrorF("config initialization error: %v", err)
 		return
 	}
-	//create img folder if not exits
+	//create libraryImg folder if not exits
 	if err := config.CreateImgFolder(); err != nil {
 		logger.ErrorF("Error... Creating image folder: %v", err)
 		return
 	}
+
+	AppBroker = broker.NewBroker()
 
 	//create a file folder if not exists example pdf
 	if err := config.CreateFileFolder(); err != nil {
@@ -44,7 +48,7 @@ func main() {
 	db := config.GetPostgreSQL()
 
 	//Initialize the server
-	go server.RunGRPCServer(db, logger)
+	go server.RunGRPCServer(db, logger, AppBroker)
 	router.Initializer()
 
 }
