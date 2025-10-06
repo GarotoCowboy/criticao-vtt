@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/GarotoCowboy/vttProject/api/grpc/proto/scene/pb"
+	"github.com/GarotoCowboy/vttProject/api/grpc/events"
+	"github.com/GarotoCowboy/vttProject/api/grpc/pb/scene"
 	"github.com/GarotoCowboy/vttProject/api/models"
 	"github.com/GarotoCowboy/vttProject/api/models/consts"
+	"github.com/GarotoCowboy/vttProject/api/models/consts/pubSubSyncConst"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -17,26 +19,26 @@ import (
 	"gorm.io/gorm"
 )
 
-func (s *SceneService) CreateScene(ctx context.Context, req *pb.CreateSceneRequest) (*pb.CreateSceneResponse, error) {
+func (s *SceneService) CreateScene(ctx context.Context, req *scene.CreateSceneRequest) (*scene.CreateSceneResponse, error) {
 	s.Logger.InfoF("GRPC Requisition to Create Scene started...")
 	if err := Validate(req); err != nil {
-		return &pb.CreateSceneResponse{}, err
+		return &scene.CreateSceneResponse{}, err
 	}
 
-	var table models.Table
+	var tableModel models.Table
 
-	s.Logger.InfoF("Searching if table exists...")
+	s.Logger.InfoF("Searching if tableModel exists...")
 
-	if err := s.DB.Where("id = ?", req.GetTableId()).First(&table).Error; err != nil {
+	if err := s.DB.WithContext(ctx).Where("id = ?", req.GetTableId()).First(&tableModel).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, status.Errorf(codes.NotFound, "table not found")
+			return nil, status.Errorf(codes.NotFound, "tableModel not found")
 		}
 		return nil, status.Errorf(codes.Internal, "internal error")
 	}
 
 	s.Logger.InfoF("creating a model and save Scene...")
-	var scene = models.Scene{
-		TableID:             table.ID,
+	var sceneModel = models.Scene{
+		TableID:             tableModel.ID,
 		Name:                req.Name,
 		GridType:            consts.GridType(req.GridType),
 		BackGroundColor:     req.BackgroundColor,
@@ -47,28 +49,34 @@ func (s *SceneService) CreateScene(ctx context.Context, req *pb.CreateSceneReque
 		Height:              uint(req.Height),
 	}
 
-	if err := s.DB.Create(&scene); err != nil {
-		return &pb.CreateSceneResponse{}, status.Errorf(codes.Canceled, "cannot create scene")
+	if err := s.DB.WithContext(ctx).Create(&sceneModel).Error; err != nil {
+		s.Logger.ErrorF("Failed to create Scene on DB: %v", err.Error)
+		return &scene.CreateSceneResponse{}, status.Errorf(codes.Internal, "cannot create scene")
 	}
 
-	response := &pb.Scene{
-		SceneId:             uint64(scene.ID),
-		TableId:             uint64(scene.TableID),
-		Name:                scene.Name,
-		Width:               uint32(scene.Width),
-		Height:              uint32(scene.Height),
-		IsVisible:           wrapperspb.Bool(scene.IsVisible),
-		GridCellDistance:    uint64(scene.GridCellDistance),
-		GridType:            pb.GridType(scene.GridType),
-		BackgroundImagePath: scene.BackgroundImagePath,
-		BackgroundColor:     scene.BackgroundImagePath,
+	response := &scene.Scene{
+		SceneId:             uint64(sceneModel.ID),
+		TableId:             uint64(sceneModel.TableID),
+		Name:                sceneModel.Name,
+		Width:               uint32(sceneModel.Width),
+		Height:              uint32(sceneModel.Height),
+		IsVisible:           wrapperspb.Bool(sceneModel.IsVisible),
+		GridCellDistance:    uint64(sceneModel.GridCellDistance),
+		GridType:            scene.GridType(sceneModel.GridType),
+		BackgroundImagePath: sceneModel.BackgroundImagePath,
+		BackgroundColor:     sceneModel.BackGroundColor,
 	}
+
+	s.Logger.InfoF("Sycronizing this new Event")
+	event := events.NewCreateSceneEvent(response)
+
+	s.Broker.Publish(pubSubSyncConst.TableSync, uint64(sceneModel.TableID), event)
 
 	s.Logger.InfoF("GRPC Requisition to Create Scene finished...")
 
-	return &pb.CreateSceneResponse{Scene: response}, nil
+	return &scene.CreateSceneResponse{Scene: response}, nil
 }
-func (s SceneService) EditScene(ctx context.Context, req *pb.EditSceneRequest) (*pb.EditSceneResponse, error) {
+func (s SceneService) EditScene(ctx context.Context, req *scene.EditSceneRequest) (*scene.EditSceneResponse, error) {
 
 	s.Logger.InfoF("GRPC Requisition to EditScene started...")
 	//validate the mask
@@ -78,53 +86,58 @@ func (s SceneService) EditScene(ctx context.Context, req *pb.EditSceneRequest) (
 	}
 
 	//create models
-	var scene models.Scene
-	var table models.Table
+	var sceneModel models.Scene
+	var tableModel models.Table
 
 	s.Logger.InfoF("Searching on DB...")
 
 	//search if table exists on DB
-	if err := s.DB.Where("id = ?", req.GetScene().GetTableId()).First(&table).Error; err != nil {
+	if err := s.DB.WithContext(ctx).Where("id = ?", req.GetScene().GetTableId()).First(&tableModel).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, status.Errorf(codes.NotFound, "invalid table id: %v", "table id not found")
 		}
 		return nil, status.Errorf(codes.NotFound, "internal error: %v", err.Error())
 	}
 	//search if scene exits on DB
-	if err := s.DB.Where("id = ?", req.GetScene().GetSceneId()).First(&scene).Error; err != nil {
+	if err := s.DB.WithContext(ctx).Where("id = ?", req.GetScene().GetSceneId()).First(&sceneModel).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, status.Errorf(codes.NotFound, "invalid image id: %v", "image id not found")
 		}
 		return nil, status.Errorf(codes.Internal, "internal error: %v", err.Error())
 	}
 
-	if err := s.DB.Model(&scene).Updates(updatesMap).Error; err != nil {
+	if err := s.DB.WithContext(ctx).Model(&sceneModel).Updates(updatesMap).Error; err != nil {
 		return nil, status.Errorf(codes.Internal, "internal error: %v", err.Error())
 	}
 
 	s.Logger.Info("GRPC Requisition to EditScene finished...")
 
-	responseScene := &pb.Scene{
-		TableId:             uint64(scene.TableID),
-		SceneId:             uint64(scene.ID),
-		Name:                scene.Name,
-		Width:               uint32(scene.Width),
-		Height:              uint32(scene.Height),
-		CreatedAt:           timestamppb.New(scene.CreatedAt),
-		UpdatedAt:           timestamppb.New(scene.UpdatedAt),
-		IsVisible:           wrapperspb.Bool(scene.IsVisible),
-		GridCellDistance:    uint64(scene.GridCellDistance),
-		GridType:            pb.GridType(scene.GridType),
-		BackgroundImagePath: scene.BackgroundImagePath,
-		BackgroundColor:     scene.BackgroundImagePath,
+	responseScene := &scene.Scene{
+		TableId:             uint64(sceneModel.TableID),
+		SceneId:             uint64(sceneModel.ID),
+		Name:                sceneModel.Name,
+		Width:               uint32(sceneModel.Width),
+		Height:              uint32(sceneModel.Height),
+		CreatedAt:           timestamppb.New(sceneModel.CreatedAt),
+		UpdatedAt:           timestamppb.New(sceneModel.UpdatedAt),
+		IsVisible:           wrapperspb.Bool(sceneModel.IsVisible),
+		GridCellDistance:    uint64(sceneModel.GridCellDistance),
+		GridType:            scene.GridType(sceneModel.GridType),
+		BackgroundImagePath: sceneModel.BackgroundImagePath,
+		BackgroundColor:     sceneModel.BackgroundImagePath,
 	}
 
-	return &pb.EditSceneResponse{
+	s.Logger.InfoF("Sycronizing this new Event")
+	event := events.NewUpdateSceneEvent(responseScene)
+
+	s.Broker.Publish(pubSubSyncConst.TableSync, uint64(sceneModel.TableID), event)
+
+	return &scene.EditSceneResponse{
 		Scene: responseScene,
 	}, nil
 }
 
-func (s SceneService) DeleteScene(ctx context.Context, req *pb.DeleteSceneRequest) (*emptypb.Empty, error) {
+func (s SceneService) DeleteScene(ctx context.Context, req *scene.DeleteSceneRequest) (*emptypb.Empty, error) {
 	s.Logger.InfoF("GRPC Requisition to Delete Scene started...")
 
 	if req.SceneId == 0 && req.TableId == 0 {
@@ -139,29 +152,28 @@ func (s SceneService) DeleteScene(ctx context.Context, req *pb.DeleteSceneReques
 		return nil, status.Errorf(codes.InvalidArgument, "table_id cannot be null")
 	}
 
-	var table models.Table
-
-	if err := s.DB.Where("id = ?", req.TableId).First(&table).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, status.Errorf(codes.NotFound, "table not found")
-		}
-		return nil, status.Errorf(codes.Internal, "internal error")
-	}
-
 	s.Logger.InfoF("Deleting scene...")
 
-	if err := s.DB.Where("id = ? AND table_id = ?", req.SceneId, table.ID).Delete(&models.Scene{}).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, status.Errorf(codes.NotFound, "scene not found")
-		}
-		return nil, status.Errorf(codes.Internal, "cannot delete scene")
+	result := s.DB.WithContext(ctx).Where("id = ? AND table_id = ?", req.SceneId, req.TableId).Delete(&models.Scene{})
+
+	if result.Error != nil {
+		return nil, status.Errorf(codes.Internal, "cannot delete scene: %v", result.Error)
 	}
+
+	if result.RowsAffected == 0 {
+		s.Logger.WarningF("No scene found to delete with id %d and table_id %d", req.SceneId, req.TableId)
+		return nil, status.Errorf(codes.NotFound, "scene not found or does not belong to the specified table")
+	}
+
+	s.Logger.InfoF("Sycronizing this new Event")
+	event := events.NewDeleteSceneEvent(req.TableId, req.SceneId)
+	s.Broker.Publish(pubSubSyncConst.TableSync, req.TableId, event)
 
 	s.Logger.InfoF("GRPC Requisition to Delete Scene finished...")
 
-	return &emptypb.Empty{}, status.Errorf(codes.Unimplemented, "method DeleteScene not implemented")
+	return &emptypb.Empty{}, nil
 }
-func (s SceneService) ListAllScenesForTable(ctx context.Context, req *pb.ListAllScenesRequest) (*pb.ListAllScenesResponse, error) {
+func (s SceneService) ListAllScenesForTable(ctx context.Context, req *scene.ListAllScenesRequest) (*scene.ListAllScenesResponse, error) {
 	s.Logger.InfoF("GRPC Requisiton to ListAllScenes on table %d", req.TableId)
 
 	if req.TableId == 0 {
@@ -177,7 +189,7 @@ func (s SceneService) ListAllScenesForTable(ctx context.Context, req *pb.ListAll
 		pageSize = 100
 	}
 
-	s.Logger.InfoF("searching on DB all scenes...")
+	s.Logger.InfoF("searching on DB all scenesModels...")
 
 	query := s.DB.Where("table_id = ?", req.TableId).Order("id ASC")
 
@@ -189,25 +201,25 @@ func (s SceneService) ListAllScenesForTable(ctx context.Context, req *pb.ListAll
 		query = query.Where("id > ?", lastID)
 	}
 
-	var scenes []*models.Scene
-	if err := query.Limit(pageSize + 1).Find(&scenes).Error; err != nil {
+	var scenesModels []*models.Scene
+	if err := query.Limit(pageSize + 1).Find(&scenesModels).Error; err != nil {
 		s.Logger.ErrorF("failed to list Scenes : %v", err)
-		return nil, status.Errorf(codes.Internal, "failed to list scenes from table")
+		return nil, status.Errorf(codes.Internal, "failed to list scenesModels from table")
 	}
 
 	var nextPageToken string
 
-	if len(scenes) > pageSize {
-		nextPageToken = fmt.Sprintf("%d", scenes[len(scenes)-1].ID)
-		scenes = scenes[:pageSize]
+	if len(scenesModels) > pageSize {
+		nextPageToken = fmt.Sprintf("%d", scenesModels[len(scenesModels)-1].ID)
+		scenesModels = scenesModels[:pageSize]
 	}
 
-	var protoScenes []*pb.Scene
+	var protoScenes []*scene.Scene
 
-	s.Logger.InfoF("Listing all scenes and creating response...")
+	s.Logger.InfoF("Listing all scenesModels and creating response...")
 
-	for _, dbScene := range scenes {
-		protoScenes = append(protoScenes, &pb.Scene{
+	for _, dbScene := range scenesModels {
+		protoScenes = append(protoScenes, &scene.Scene{
 			SceneId:             uint64(dbScene.ID),
 			TableId:             uint64(dbScene.TableID),
 			Name:                dbScene.Name,
@@ -215,7 +227,7 @@ func (s SceneService) ListAllScenesForTable(ctx context.Context, req *pb.ListAll
 			Height:              uint32(dbScene.Height),
 			IsVisible:           wrapperspb.Bool(dbScene.IsVisible),
 			GridCellDistance:    uint64(dbScene.GridCellDistance),
-			GridType:            pb.GridType(dbScene.GridType),
+			GridType:            scene.GridType(dbScene.GridType),
 			BackgroundImagePath: dbScene.BackgroundImagePath,
 			BackgroundColor:     dbScene.BackgroundImagePath,
 			CreatedAt:           timestamppb.New(dbScene.CreatedAt),
@@ -223,7 +235,7 @@ func (s SceneService) ListAllScenesForTable(ctx context.Context, req *pb.ListAll
 		})
 	}
 
-	response := &pb.ListAllScenesResponse{
+	response := &scene.ListAllScenesResponse{
 		Scene:         protoScenes,
 		NextPageToken: nextPageToken,
 	}
