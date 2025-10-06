@@ -4,3 +4,9 @@
 *.dylib
 *.test
 *.out
+/img
+/files
+/db
+*.jpg
+*.jpeg
+*.png
