@@ -8,8 +8,9 @@ import (
 )
 
 var (
-	db     *gorm.DB
-	logger *Logger
+	db         *gorm.DB
+	logger     *Logger
+	JWT_SECRET []byte
 )
 
 func InitPostgres() error {
