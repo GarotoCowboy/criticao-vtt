@@ -1,9 +1,12 @@
 package dice
 
 import (
+	"errors"
 	"fmt"
 
+	"github.com/GarotoCowboy/vttProject/api/models"
 	"github.com/GarotoCowboy/vttProject/api/utils"
+	"gorm.io/gorm"
 )
 
 type RollResult struct {
@@ -14,7 +17,16 @@ type RollResult struct {
 	Total      int   `json:"total"`
 }
 
-func Roll(numDice, sides int, bonuses []int) (*RollResult, error) {
+func Roll(numDice, sides int, bonuses []int, tableID, userID uint, db *gorm.DB) (*RollResult, error) {
+
+	var membership models.TableUser
+	if err := db.Where("table_id = ? AND user_id = ?", tableID, userID).First(&membership).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("user is not a member of this table")
+		}
+		return nil, err
+	}
+
 	if numDice <= 0 {
 		return nil, fmt.Errorf("numDice must be positive")
 	}

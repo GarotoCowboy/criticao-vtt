@@ -2,7 +2,8 @@ package character
 
 import (
 	"fmt"
-	"github.com/GarotoCowboy/vttProject/api/grpc/proto/character/pb"
+
+	"github.com/GarotoCowboy/vttProject/api/grpc/pb/character"
 )
 
 func ErrParamIsRequired(name, typ string) error {
@@ -14,7 +15,7 @@ type ErrorResponse struct {
 	Code    int    `json:"code"`
 }
 
-func Validate(req *pb.CreateCharacterRequest) error {
+func Validate(req *character.CreateCharacterRequest) error {
 
 	if req.TableUserId == 0 && req.SystemKey == 0 && req.PlayerName == "" {
 		return fmt.Errorf("request body is empty")

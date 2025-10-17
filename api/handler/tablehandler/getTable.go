@@ -1,12 +1,13 @@
 package tablehandler
 
 import (
+	"net/http"
+	"strconv"
+
 	"github.com/GarotoCowboy/vttProject/api/dto/tableDTO"
 	"github.com/GarotoCowboy/vttProject/api/handler"
 	tableService "github.com/GarotoCowboy/vttProject/api/service/table"
 	"github.com/gin-gonic/gin"
-	"net/http"
-	"strconv"
 )
 
 // @BasePath /api/v1
@@ -26,6 +27,18 @@ import (
 func GetTableHandler(ctx *gin.Context) {
 	idStr := ctx.Query("id")
 
+	userIDValue, exists := ctx.Get("user_id")
+	if !exists {
+		handler.SendError(ctx, http.StatusUnauthorized, "user_id not found in context")
+		return
+	}
+
+	userID, ok := userIDValue.(uint)
+	if !ok {
+		handler.SendError(ctx, http.StatusUnauthorized, "invalid user_id type in context")
+		return
+	}
+
 	if idStr == "" {
 		handler.SendError(ctx, http.StatusBadRequest, tableDTO.ErrParamIsRequired("id", "queryParameter").Error())
 		return
@@ -36,7 +49,7 @@ func GetTableHandler(ctx *gin.Context) {
 		return
 	}
 
-	tableData, err := tableService.GetTable(handler.GetHandlerDB(), uint(id))
+	tableData, err := tableService.GetTable(handler.GetHandlerDB(), uint(id), userID)
 	if err != nil {
 		handler.SendError(ctx, http.StatusBadRequest, err.Error())
 		return

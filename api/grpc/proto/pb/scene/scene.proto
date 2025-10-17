@@ -1,0 +1,147 @@
+syntax = "proto3";
+
+package scene;
+
+option go_package = "github.com/GarotoCowboy/vttProject/api/grpc/pb/scene;scene";
+
+import "google/protobuf/field_mask.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
+
+// The `SceneService` manages scenes (e.g., maps, battlemaps) within a table.
+service SceneService{
+  // Creates a new scene for a table.
+  rpc CreateScene(CreateSceneRequest) returns(CreateSceneResponse);
+
+  // Edits the properties of an existing scene using a field mask for partial updates.
+  rpc EditScene(EditSceneRequest) returns (EditSceneResponse);
+
+  // Deletes a scene from a table.
+  rpc DeleteScene(DeleteSceneRequest) returns (google.protobuf.Empty);
+
+  // Lists all scenes associated with a given table, with support for pagination.
+  rpc ListAllScenesForTable(ListAllScenesRequest) returns(ListAllScenesResponse);
+}
+
+// Represents a single scene and its configuration.
+message Scene{
+  // The unique identifier for the scene.
+  uint64 scene_id = 1;
+  // The ID of the table this scene belongs to.
+  uint64 table_id = 2;
+  // The user-defined name of the scene.
+  string name = 3;
+  // The width of the scene in grid units.
+  uint32 width = 4;
+  // The height of the scene in grid units.
+  uint32 height = 5;
+  // The URL or path to the background image for the scene.
+  string background_image_path = 6;
+  // A wrapper that indicates if the scene is visible to players. Allows distinguishing between 'false' and 'not set'.
+  google.protobuf.BoolValue is_visible = 7;
+  // The background color of the scene, e.g., a hex code like "#000000". Used if no image is present.
+  string background_color = 8;
+  // The distance each grid cell represents (e.g., 5 for 5 feet).
+  uint64 grid_cell_distance = 9;
+  // The type of grid used on the scene (Square or Hexagon).
+  GridType grid_type = 10;
+  // Timestamp of when the scene was created.
+  google.protobuf.Timestamp created_at = 11;
+  // Timestamp of the last update to the scene.
+  google.protobuf.Timestamp updated_at = 12;
+}
+
+// Defines the type of grid for a scene.
+enum GridType{
+  SQUARE = 0;   // A standard square grid.
+  HEXAGON = 1;  // A hexagonal grid.
+}
+
+// Request to create a new scene.
+message CreateSceneRequest{
+  // The ID of the table to add the scene to.
+  uint64 table_id = 1;
+  // The name for the new scene.
+  string name = 2;
+  // The initial width of the scene.
+  uint32 width = 3;
+  // The initial height of the scene.
+  uint32 height = 4;
+  // The initial background image path.
+  string background_image_path = 5;
+  // The initial background color.
+  string background_color = 6;
+  // The initial grid cell distance.
+  uint64 grid_cell_distance = 7;
+  // The type of grid for the scene.
+  GridType grid_type = 8;
+}
+
+// Response after creating a scene, containing the new scene object.
+message CreateSceneResponse{
+  // The complete scene object as it was created.
+  Scene scene = 1;
+}
+
+// Request to edit an existing scene.
+message EditSceneRequest{
+  // The scene object containing the new data. `scene_id` must be specified.
+  Scene scene = 1;
+  // A field mask to specify which fields of the scene should be updated.
+  google.protobuf.FieldMask mask = 2;
+}
+
+// Response after editing a scene, containing the full updated scene object.
+message EditSceneResponse{
+  // The scene object with the applied updates.
+  Scene scene = 1;
+}
+
+// Request to delete a scene.
+message DeleteSceneRequest{
+  // The unique ID of the scene to be deleted.
+  uint64 scene_id = 1;
+  // The ID of the table the scene belongs to, for validation.
+  uint64 table_id = 2;
+}
+
+// Request to list all scenes for a table.
+message ListAllScenesRequest{
+  // The ID of the table whose scenes should be retrieved.
+  uint64 table_id = 1;
+  // The maximum number of scenes to return per page.
+  uint32 page_size = 2;
+  // A token for retrieving a specific page of results.
+  string page_token = 3;
+}
+
+// Response containing a paginated list of scenes.
+message ListAllScenesResponse{
+  // The list of scenes for the requested page.
+  repeated Scene scenes = 1;
+  // A token to be used in the next request to fetch the subsequent page.
+  string next_page_token = 2;
+}
+
+// --- Event Messages for real-time synchronization ---
+
+// Event triggered when a new scene is created.
+message SceneCreated{
+  // The newly created scene object.
+  Scene scene = 1;
+}
+
+// Event triggered when a scene's properties are updated.
+message SceneUpdated {
+  // The scene object with its updated data.
+  Scene scene = 1;
+}
+
+// Event triggered when a scene is deleted.
+message SceneDeleted{
+  // The ID of the scene that was deleted.
+  uint64 scene_id = 1;
+  // The ID of the table the scene belonged to.
+  uint64 table_id = 2;
+}

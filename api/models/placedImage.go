@@ -21,4 +21,9 @@ type PlacedImage struct {
 
 	Width  uint `json:"width" gorm:"not null"`
 	Height uint `json:"height" gorm:"not null"`
+
+	CanBeViewedBy   consts.PermissionLevel `json:"can_view_by" gorm:"default:4"`
+	CanBeModifiedBy consts.PermissionLevel `json:"can_be_modified_by" gorm:"default:2"`
+
+	Owners []GameObjectOwner `json:"owners" gorm:"foreignKey:PlacedImageID;constraint:OnDelete:CASCADE"`
 }

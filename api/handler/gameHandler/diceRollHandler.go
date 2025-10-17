@@ -7,26 +7,35 @@ import (
 	"github.com/GarotoCowboy/vttProject/api/dto/gameDTO"
 	"github.com/GarotoCowboy/vttProject/api/handler"
 	"github.com/GarotoCowboy/vttProject/api/service/gameService/dice"
-	"github.com/GarotoCowboy/vttProject/api/service/tableUser"
+	"github.com/GarotoCowboy/vttProject/api/service/user"
 	"github.com/gin-gonic/gin"
 )
 
 func RollDiceHandler(ctx *gin.Context) {
 
-	tableUserIdStr := ctx.Param("tableUser")
+	userIDValue, exists := ctx.Get("user_id")
 
-	if tableUserIdStr == "" {
-		handler.SendError(ctx, http.StatusBadRequest, gameDTO.ErrParamIsRequired("tableUserId", "uint").Error())
+	if !exists {
+		handler.SendError(ctx, http.StatusBadRequest, "user_id not found in context")
+		return
 	}
 
-	tableUserId, err := strconv.Atoi(tableUserIdStr)
-	if err != nil || tableUserId <= 0 {
+	userID, ok := userIDValue.(uint)
+	if !ok {
+		handler.SendError(ctx, http.StatusBadRequest, "invalid user_id type in context")
+		return
+	}
+
+	tableIDStr := ctx.Param("tableID")
+
+	if tableIDStr == "" {
+		handler.SendError(ctx, http.StatusBadRequest, gameDTO.ErrParamIsRequired("tableID", "uint").Error())
+		return
+	}
+
+	tableID, err := strconv.ParseUint(tableIDStr, 10, 64)
+	if err != nil || tableID <= 0 {
 		handler.SendError(ctx, http.StatusBadRequest, "id must be a positive integer")
-	}
-
-	tableUserData, err := tableUser.GetTableUser(handler.GetHandlerDB(), uint(tableUserId))
-	if err != nil {
-		handler.SendError(ctx, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -37,10 +46,13 @@ func RollDiceHandler(ctx *gin.Context) {
 		return
 	}
 
-	roll, err := dice.Roll(request.NumDices, request.Sides, request.Bonuses)
+	roll, err := dice.Roll(request.NumDices, request.Sides, request.Bonuses, uint(tableID), userID, handler.GetHandlerDB())
 	if err != nil {
+		handler.SendError(ctx, http.StatusUnauthorized, err.Error())
 		return
 	}
+
+	userData, _ := user.GetUser(handler.GetHandlerDB(), userID)
 
 	resp := gameDTO.RollResultResponse{
 		Bonuses:    roll.Bonuses,
@@ -48,7 +60,7 @@ func RollDiceHandler(ctx *gin.Context) {
 		SumOfBonus: roll.SumOfBonus,
 		SumOfRolls: roll.SumOfRolls,
 		Total:      roll.Total,
-		UserName:   tableUserData.User.Username,
+		UserName:   userData.Username,
 	}
 
 	handler.SendSucess(ctx, "roll dice", resp)

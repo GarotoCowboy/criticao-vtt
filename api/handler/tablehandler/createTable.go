@@ -26,13 +26,25 @@ import (
 func CreateTableHandler(ctx *gin.Context) {
 	request := tableDTO.CreateTableRequest{}
 
+	userIDValue, exists := ctx.Get("user_id")
+	if !exists {
+		handler.SendError(ctx, http.StatusUnauthorized, "user_id not found in context")
+		return
+	}
+
+	userID, ok := userIDValue.(uint)
+	if !ok {
+		handler.SendError(ctx, http.StatusUnauthorized, "invalid user_id type in context")
+		return
+	}
+
 	if err := ctx.BindJSON(&request); err != nil {
 		handler.GetHandlerLogger().ErrorF("Error binding json: %v", err.Error())
 		handler.SendError(ctx, http.StatusBadRequest, "invalid request body")
 		return
 	}
 
-	table, err := tableService.CreateTable(handler.GetHandlerDB(), request)
+	table, err := tableService.CreateTable(handler.GetHandlerDB(), userID, request)
 	if err != nil {
 		handler.GetHandlerLogger().ErrorF("Error creating table: %v", err.Error())
 		handler.SendError(ctx, http.StatusInternalServerError, err.Error())
@@ -42,7 +54,7 @@ func CreateTableHandler(ctx *gin.Context) {
 		ID:         table.ID,
 		Name:       table.Name,
 		Password:   table.Password,
-		OwnerID:    table.OwnerID,
+		OwnerID:    userID,
 		InviteLink: table.InviteLink,
 		Owner:      table.Owner,
 	}

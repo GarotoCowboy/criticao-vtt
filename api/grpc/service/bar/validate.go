@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/GarotoCowboy/vttProject/api/grpc/proto/bar/pb"
+	"github.com/GarotoCowboy/vttProject/api/grpc/pb/bar"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -21,7 +21,7 @@ type ErrorResponse struct {
 	Code    int    `json:"code"`
 }
 
-func Validate(req *pb.CreateBarRequest) error {
+func Validate(req *bar.CreateBarRequest) error {
 
 	if req.TokenId == 0 {
 		return ErrParamIsRequired("tokenId", "uint64")
@@ -36,7 +36,7 @@ func Validate(req *pb.CreateBarRequest) error {
 	return nil
 }
 
-func ValidadeAndBuildUpdateMap(req *pb.EditBarRequest) (map[string]interface{}, error) {
+func ValidadeAndBuildUpdateMap(req *bar.EditBarRequest) (map[string]interface{}, error) {
 
 	if req == nil || req.GetBar() == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "the requisition and bar id cannot be null")

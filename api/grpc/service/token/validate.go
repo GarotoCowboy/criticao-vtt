@@ -3,7 +3,7 @@ package token
 import (
 	"fmt"
 
-	"github.com/GarotoCowboy/vttProject/api/grpc/proto/token/pb"
+	"github.com/GarotoCowboy/vttProject/api/grpc/pb/token"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -17,7 +17,7 @@ type ErrorResponse struct {
 	Code    int    `json:"code"`
 }
 
-func Validate(req *pb.CreateTokenRequest) error {
+func Validate(req *token.CreateTokenRequest) error {
 
 	if req.TableId == 0 {
 		return ErrParamIsRequired("tableId", "tableName")
@@ -26,10 +26,10 @@ func Validate(req *pb.CreateTokenRequest) error {
 	return nil
 }
 
-func ValidadeAndBuildUpdateMap(req *pb.EditTokenRequest) (map[string]interface{}, error) {
+func ValidadeAndBuildUpdateMap(req *token.EditTokenRequest) (map[string]interface{}, error) {
 
 	if req == nil || req.GetToken() == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "the requisition and token cannot be null")
+		return nil, status.Errorf(codes.InvalidArgument, "the requisition and getToken cannot be null")
 	}
 
 	if req.GetToken().GetTokenId() <= 0 {
@@ -45,15 +45,15 @@ func ValidadeAndBuildUpdateMap(req *pb.EditTokenRequest) (map[string]interface{}
 		return nil, status.Errorf(codes.InvalidArgument, "FieldMask is mandatory and must specify at least one field to update")
 	}
 
-	token := req.GetToken()
+	getToken := req.GetToken()
 	updatesMap := make(map[string]interface{})
 
 	for _, path := range mask.GetPaths() {
 		switch path {
 		case "name":
-			updatesMap["name"] = token.GetName()
+			updatesMap["name"] = getToken.GetName()
 		case "image_url":
-			updatesMap["imageUrl"] = token.GetImageUrl()
+			updatesMap["imageUrl"] = getToken.GetImageUrl()
 		default:
 			return nil, status.Errorf(codes.InvalidArgument, "unknown or not allowed field in mask: '%s'", path)
 		}

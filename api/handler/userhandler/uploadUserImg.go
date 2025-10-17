@@ -1,14 +1,29 @@
 package userhandler
 
 import (
+	"net/http"
+
 	"github.com/GarotoCowboy/vttProject/api/handler"
 	"github.com/gin-gonic/gin"
-	"net/http"
 )
 
 //TODO: FAZER VERIFICAÇÕES PARA GARANTIR A INTEGRIDADE DA ENTREGA DE IMAGEM!!!
 
+//TODO: TENHO QUE REFATORAR TODO ESSE CODIGO PARA IMPLEMENTAR O JWT E SALVAR A IMAGEM USANDO O ID DO USUARIO QUE PEDIU.
+
 func UploadUserImg(ctx *gin.Context) {
+
+	//userIDValue, exists := ctx.Get("user_id")
+	//if !exists {
+	//	handler.SendError(ctx, http.StatusBadRequest, "user_id not found in context")
+	//	return
+	//}
+
+	//userID,ok := userIDValue.(uint)
+	//if !ok {
+	//	handler.SendError(ctx, http.StatusBadRequest, "invalid user_id type in context")
+	//	return
+	//}
 
 	//Get file
 	file, err := ctx.FormFile("image")

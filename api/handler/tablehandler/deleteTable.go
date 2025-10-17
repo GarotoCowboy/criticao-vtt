@@ -28,6 +28,18 @@ import (
 func DeleteTableHandler(ctx *gin.Context) {
 	idStr := ctx.Query("id")
 
+	userIDValue, exists := ctx.Get("user_id")
+	if !exists {
+		handler.SendError(ctx, http.StatusInternalServerError, "user_id not found in context")
+		return
+	}
+
+	userID, ok := userIDValue.(uint)
+	if !ok {
+		handler.SendError(ctx, http.StatusBadRequest, "invalid user_id type in context")
+		return
+	}
+
 	if idStr == "" {
 		handler.SendError(ctx, http.StatusBadRequest, tableDTO.ErrParamIsRequired("id", "queryParameter").Error())
 		return
@@ -38,7 +50,7 @@ func DeleteTableHandler(ctx *gin.Context) {
 		return
 	}
 
-	tableData, err := tableService.DeleteTable(handler.GetHandlerDB(), uint(id))
+	tableData, err := tableService.DeleteTable(handler.GetHandlerDB(), uint(id), userID)
 	if err != nil {
 		handler.SendError(ctx, http.StatusBadRequest, err.Error())
 		return

@@ -6,7 +6,7 @@ import (
 	"image"
 	"net/http"
 
-	"github.com/GarotoCowboy/vttProject/api/grpc/proto/imageLibrary/pb"
+	image_library "github.com/GarotoCowboy/vttProject/api/grpc/pb/imageLibrary"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -15,7 +15,7 @@ func ErrParamIsRequired(name, typ string) error {
 	return fmt.Errorf("param %s (type: %s) is required", name, typ)
 }
 
-func ValidateUploadInit(initMsg *pb.UploadInit) error {
+func ValidateUploadInit(initMsg *image_library.UploadInit) error {
 
 	if initMsg == nil {
 		return fmt.Errorf("The first message needs be initialization (init)")
@@ -52,7 +52,7 @@ func validateImageContent(imageBytes []byte) (*image.Config, string, error) {
 
 }
 
-func ValidadeAndBuildUpdateMap(req *pb.EditImageRequest) (map[string]interface{}, error) {
+func ValidadeAndBuildUpdateMap(req *image_library.EditImageRequest) (map[string]interface{}, error) {
 
 	if req == nil || req.Image.ImageId == 0 {
 		return nil, status.Errorf(codes.InvalidArgument, "the requisition and image id cannot be null")

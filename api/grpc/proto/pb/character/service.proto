@@ -2,10 +2,10 @@ syntax = "proto3";
 
 package character;
 
-import "sheet.proto";
 import "google/protobuf/timestamp.proto";
+import "pb/character/sheet.proto";
 
-option go_package = "pb/";
+option go_package = "github.com/GarotoCowboy/vttProject/api/grpc/pb/character;character";
 
 service CharacterService{
   rpc CreateCharacter(CreateCharacterRequest) returns (CreateCharacterResponse);

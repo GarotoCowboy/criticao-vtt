@@ -1,11 +1,12 @@
 package userhandler
 
 import (
+	"net/http"
+
 	"github.com/GarotoCowboy/vttProject/api/dto/userDTO"
 	"github.com/GarotoCowboy/vttProject/api/handler"
 	userService "github.com/GarotoCowboy/vttProject/api/service/user"
 	"github.com/gin-gonic/gin"
-	"net/http"
 )
 
 // @BasePath /api/v1
@@ -29,7 +30,7 @@ func ListUsersHandler(ctx *gin.Context) {
 		return
 	}
 
-	var responses = []userDTO.UserResponse{}
+	var responses []userDTO.UserResponse
 
 	for _, user := range users {
 		var resp = userDTO.UserResponse{

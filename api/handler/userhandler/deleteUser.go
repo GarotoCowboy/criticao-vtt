@@ -1,12 +1,12 @@
 package userhandler
 
 import (
+	"net/http"
+
 	"github.com/GarotoCowboy/vttProject/api/dto/userDTO"
 	"github.com/GarotoCowboy/vttProject/api/handler"
 	userService "github.com/GarotoCowboy/vttProject/api/service/user"
 	"github.com/gin-gonic/gin"
-	"net/http"
-	"strconv"
 )
 
 // @BasePath /api/v1
@@ -26,21 +26,34 @@ import (
 // @Router /user [delete]
 func DeleteUserHandler(ctx *gin.Context) {
 
-	idStr := ctx.Query("id")
+	//idStr := ctx.Query("id")
 
-	if idStr == "" {
-		handler.SendError(ctx, http.StatusBadRequest, userDTO.ErrParamIsRequired("id", "queryParameter").Error())
-		return
-	}
-	id, err := strconv.Atoi(idStr)
-	if err != nil || id <= 0 {
-		handler.SendError(ctx, http.StatusBadRequest, "id must be a positive integer")
+	userIDValue, exists := ctx.Get("user_id")
+	if !exists {
+		handler.SendError(ctx, http.StatusBadRequest, "user_id not found in context")
 		return
 	}
 
-	userData, err := userService.DeleteUser(handler.GetHandlerDB(), uint(id))
+	userID, ok := userIDValue.(uint)
+	if !ok {
+		handler.SendError(ctx, http.StatusBadRequest, "invalid user_id type in context")
+		return
+	}
+
+	//if idStr == "" {
+	//	handler.SendError(ctx, http.StatusBadRequest, userDTO.ErrParamIsRequired("id", "queryParameter").Error())
+	//	return
+	//}
+	//id, err := strconv.Atoi(idStr)
+	//if err != nil || id <= 0 {
+	//	handler.SendError(ctx, http.StatusBadRequest, "id must be a positive integer")
+	//	return
+	//}
+
+	userData, err := userService.DeleteUser(handler.GetHandlerDB(), userID)
 	if err != nil {
 		handler.SendError(ctx, http.StatusBadRequest, err.Error())
+		return
 	}
 
 	resp := userDTO.UserResponse{

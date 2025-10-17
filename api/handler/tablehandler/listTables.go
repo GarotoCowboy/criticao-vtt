@@ -1,11 +1,12 @@
 package tablehandler
 
 import (
+	"net/http"
+
 	"github.com/GarotoCowboy/vttProject/api/dto/tableDTO"
 	"github.com/GarotoCowboy/vttProject/api/handler"
 	tableService "github.com/GarotoCowboy/vttProject/api/service/table"
 	"github.com/gin-gonic/gin"
-	"net/http"
 )
 
 // @BasePath /api/v1
@@ -22,7 +23,18 @@ import (
 // @Router /tables [get]
 func ListTablesHandler(ctx *gin.Context) {
 
-	tables, err := tableService.ListTables(handler.GetHandlerDB())
+	userIDValue, exists := ctx.Get("user_id")
+	if !exists {
+		handler.SendError(ctx, http.StatusUnauthorized, "user_id not found in context")
+		return
+	}
+	userID, ok := userIDValue.(uint)
+	if !ok {
+		handler.SendError(ctx, http.StatusInternalServerError, "invalid user_id type in context")
+		return
+	}
+
+	tables, err := tableService.ListTables(handler.GetHandlerDB(), userID)
 	if err != nil {
 		handler.GetHandlerLogger().ErrorF("Error binding json: %v", err.Error())
 		handler.SendError(ctx, http.StatusBadRequest, "invalid request body")

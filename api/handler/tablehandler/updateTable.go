@@ -1,12 +1,13 @@
 package tablehandler
 
 import (
+	"net/http"
+	"strconv"
+
 	"github.com/GarotoCowboy/vttProject/api/dto/tableDTO"
 	"github.com/GarotoCowboy/vttProject/api/handler"
 	tableService "github.com/GarotoCowboy/vttProject/api/service/table"
 	"github.com/gin-gonic/gin"
-	"net/http"
-	"strconv"
 )
 
 // @BasePath /api/v1
@@ -29,9 +30,21 @@ func UpdateTableHandler(ctx *gin.Context) {
 	request := tableDTO.UpdateTableRequest{}
 
 	idParam := ctx.Query("id")
-	id, err := strconv.ParseUint(idParam, 10, 64)
+	tableID, err := strconv.ParseUint(idParam, 10, 64)
 	if err != nil {
-		handler.SendError(ctx, http.StatusBadRequest, "invalid table ID")
+		handler.SendError(ctx, http.StatusNotFound, "invalid table ID")
+		return
+	}
+
+	userIDValue, exists := ctx.Get("user_id")
+	if !exists {
+		handler.SendError(ctx, http.StatusInternalServerError, "user_id not found in context")
+		return
+	}
+
+	userID, ok := userIDValue.(uint)
+	if !ok {
+		handler.SendError(ctx, http.StatusBadRequest, "invalid user_id type in context")
 		return
 	}
 
@@ -41,7 +54,7 @@ func UpdateTableHandler(ctx *gin.Context) {
 		return
 	}
 
-	user, err := tableService.UpdateTable(handler.GetHandlerDB(), uint(id), request)
+	user, err := tableService.UpdateTable(handler.GetHandlerDB(), uint(tableID), userID, request)
 	if err != nil {
 		handler.GetHandlerLogger().ErrorF("Error updating table: %v", err.Error())
 		handler.SendError(ctx, http.StatusInternalServerError, err.Error())

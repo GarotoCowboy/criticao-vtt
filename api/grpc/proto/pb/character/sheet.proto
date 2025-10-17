@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package character;
 
-option go_package = "pb/";
+option go_package = "github.com/GarotoCowboy/vttProject/api/grpc/pb/character;character";
 
 import "google/protobuf/timestamp.proto";
 

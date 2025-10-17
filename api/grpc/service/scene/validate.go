@@ -3,7 +3,7 @@ package scene
 import (
 	"fmt"
 
-	"github.com/GarotoCowboy/vttProject/api/grpc/proto/scene/pb"
+	"github.com/GarotoCowboy/vttProject/api/grpc/pb/scene"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -12,7 +12,7 @@ func ErrParamIsRequired(name, typ string) error {
 	return fmt.Errorf("param %s (type: %s) is required", name, typ)
 }
 
-func Validate(req *pb.CreateSceneRequest) error {
+func Validate(req *scene.CreateSceneRequest) error {
 
 	if req.TableId == 0 && req.Name == "" && req.Width == 0 && req.Height == 0 && req.GridType == 0 {
 		return status.Errorf(codes.InvalidArgument, "mandatory fields not filled in")
@@ -32,14 +32,14 @@ func Validate(req *pb.CreateSceneRequest) error {
 	if req.Height == 0 {
 		return ErrParamIsRequired("height", "uint64")
 	}
-	if req.GridType == 0 {
-		return ErrParamIsRequired("gridType", "consts.GridType")
-	}
+	//if req.GridType < 0 && req.GridType > 1 {
+	//	return ErrParamIsRequired("gridType", "consts.GridType")
+	//}
 
 	return nil
 }
 
-func ValidateAndBuildUpdateMap(req *pb.EditSceneRequest) (map[string]interface{}, error) {
+func ValidateAndBuildUpdateMap(req *scene.EditSceneRequest) (map[string]interface{}, error) {
 
 	if req == nil || req.Scene.SceneId == 0 {
 		return nil, status.Errorf(codes.InvalidArgument, "the requisition and scene id cannot be null")
@@ -92,13 +92,13 @@ func ValidateAndBuildUpdateMap(req *pb.EditSceneRequest) (map[string]interface{}
 			} else {
 				return nil, status.Errorf(codes.InvalidArgument, "field 'is_visible' is in the mask but value is null'")
 			}
-		case "grid_type":
-			{
-				if getScene.GridType == 0 {
-					return nil, status.Errorf(codes.InvalidArgument, "grid_type can not be empty")
-				}
-				updatesMap["grid_type"] = getScene.GridType
-			}
+			//case "grid_type":
+			//	{
+			//		if getScene.GridType < 0 && getScene.GridType > 1 {
+			//			return nil, status.Errorf(codes.InvalidArgument, "gridType  be equal to 0 or GridTyper equal to 1")
+			//		}
+			//		updatesMap["grid_type"] = getScene.GridType
+			//}
 
 		}
 
