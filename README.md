@@ -36,9 +36,12 @@ A aplicação utiliza uma abordagem híbrida para máxima eficiência:
 ### Funcionalidades Implementadas
 - **Autenticação Segura**: Sistema de autenticação JWT utilizando Bearer Tokens para garantir a segurança nas interações e acessos de usuários.
 - **Gerenciamento de Mesas**: CRUD completo para criação de mesas de RPG, com geração de links de convite únicos, listagem e associação de participantes.
+- **Gerenciamento de Cenas**: CRUD completo para criação de cenas em uma mesa de RPG, sendo possível inserir tokens e imagens para que sirva de tabuleiro para os jogadores.
 - **Gerenciamento de Usuários**: CRUD completo para contas de usuário.
 - **Motor de Fichas de Personagem**: Sistema que possibilita a criação de fichas de personagens para diferentes sistemas de RPG (Sistema Tormenta 20 implementado; D&D e GURPS planejados).
-- **Chat em Tempo Real**: Implementação de um chat bidirecional (via gRPC) utilizando um broker e padrão Pub/Sub para interação entre os jogadores de forma orientada a eventos.
+- **Chat em Tempo Real**: Implementação de um chat bidirecional (via gRPC) utilizando um broker Pub/Sub para interação entre os jogadores de forma orientada a eventos.
+- **Token de personagens e suas barras**: Implementação de tokens e barras utilizando um broker Pub/Sub para interação entre os elementos e jogadores de forma orientada a eventos.
+-  **Tokens em cenas e imagens em cenas**: Implementação de tokens e imagens inseridos em uma cena sendo possível movimentar e alterar a camada desses objetos, utiliza um broker Pub/Sub para interação entre os objetos e jogadores de forma orientada a eventos.
 - **Atualização em Tempo Real das Fichas**: Fichas de personagem são atualizadas em tempo real, propagando as mudanças instantaneamente para todos os clientes conectados na sessão.
 
 ---
