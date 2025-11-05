@@ -44,7 +44,7 @@ func Validate(req *chat.SendMessageRequest) error {
 
 	case chat.MessageType_SYSTEM:
 		// Mensagens de sistema não devem ser enviadas por usuários.
-		return fmt.Errorf("message type SYSTEM cannot be sent by a user")
+		return fmt.Errorf("message type SYSTEM cannot be sent by a tableUser")
 
 	default:
 		// Garante que um tipo de mensagem válido foi fornecido.

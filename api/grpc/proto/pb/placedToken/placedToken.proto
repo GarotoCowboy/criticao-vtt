@@ -1,0 +1,172 @@
+syntax = "proto3";
+
+package placedToken;
+
+option go_package = "github.com/GarotoCowboy/vttProject/api/grpc/pb/placedToken;placedToken";
+
+import "google/protobuf/field_mask.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+// The `PlacedTokenService` manages token instances that are placed on a specific scene or map.
+service PlacedTokenService{
+  // Creates a new token instance on a scene.
+  rpc CreatePlacedToken(CreatePlacedTokenRequest)returns(CreatePlacedTokenResponse);
+
+  // Edits the properties of an existing placed token.
+  rpc EditPlacedToken(EditPlacedTokenRequest)returns(EditPlacedTokenResponse);
+
+  // Deletes a token from a scene.
+  rpc DeletePlacedToken(DeletePlacedTokenRequest)returns(DeletePlacedTokenResponse);
+
+  // Lists all tokens currently on a specific scene.
+  rpc ListAllTokensOnScene(ListAllTokensRequest)returns(ListAllTokensResponse);
+
+  // Moves a token to a new position on the scene.
+  rpc MoveToken(MoveTokenRequest)returns(MoveTokenResponse);
+}
+
+// Represents a token instance that has been placed onto a scene.
+message PlacedToken{
+  // The ID of the scene where the token is placed.
+  uint64 scene_id = 1;
+  // The ID of the original token template from the library.
+  uint64 token_id = 2;
+  // The unique identifier for this specific instance of the token on the scene.
+  uint64 placed_token_id = 3;
+  // The X-coordinate of the token's position on the scene grid.
+  int32 pos_x = 4;
+  // The Y-coordinate of the token's position on the scene grid.
+  int32 pos_y = 5;
+  // The layer on which the token is placed (e.g., map, player, GM layer).
+  LayerType layer = 6;
+  // The size of the token, often in grid units.
+  int32 size = 7;
+  // The rotation of the token in degrees.
+  int32 rotation = 8;
+  // Timestamp of when this token was placed on the scene.
+  google.protobuf.Timestamp created_at = 9;
+  // Timestamp of the last update to this placed token.
+  google.protobuf.Timestamp updated_at = 10;
+}
+
+// Request to create a new placed token.
+message CreatePlacedTokenRequest{
+  // The ID of the scene to place the token on.
+  uint64 scene_id = 1;
+  // The ID of the token template to use.
+  uint64 token_id = 2;
+  // The initial X-coordinate for the token.
+  int32 pos_x = 3;
+  // The initial Y-coordinate for the token.
+  int32 pos_y = 4;
+}
+
+// Response after creating a placed token.
+message CreatePlacedTokenResponse{
+  // The full object of the newly created placed token.
+  PlacedToken placed_token = 1;
+}
+
+// Defines the different layers a token can exist on within a scene.
+enum LayerType{
+  // The default layer, visible to players and the GM.
+  PLAYER_LAYER = 0;
+  // The layer for map elements, typically below the player layer.
+  MAP_LAYER = 1;
+  // A layer only visible to the Game Master (GM).
+  MASTER_LAYER = 2;
+}
+
+// Request to edit a placed token.
+message EditPlacedTokenRequest{
+  // The placed token object with the new data. `placed_token_id` must be specified.
+  PlacedToken placed_token = 1;
+  // A field mask to specify which fields should be updated (e.g., "size", "rotation").
+  google.protobuf.FieldMask mask = 2;
+}
+
+// Response after editing a placed token.
+message EditPlacedTokenResponse{
+  // The full, updated placed token object.
+  PlacedToken placed_token = 1;
+}
+
+// Request to delete a placed token.
+message DeletePlacedTokenRequest{
+  // The unique ID of the token instance to delete.
+  uint64 placed_token_id = 1;
+  // The ID of the scene the token belongs to, for validation.
+  uint64 scene_id = 2;
+}
+
+// Response for a delete operation.
+message DeletePlacedTokenResponse{
+  // An empty message indicates success.
+  google.protobuf.Empty empty = 1;
+}
+
+// Request to list all tokens on a scene.
+message ListAllTokensRequest{
+  // The ID of the scene whose tokens are to be listed.
+  uint64 scene_id = 1;
+}
+
+// Response containing a list of all tokens on a scene.
+message ListAllTokensResponse{
+  // A list of placed token objects.
+  repeated PlacedToken placed_tokens = 1;
+}
+
+// Request to move a token to a new location.
+message MoveTokenRequest{
+  // The ID of the scene where the move is happening.
+  uint64 scene_id = 1;
+  // The ID of the token instance being moved.
+  uint64 placed_token_id = 2;
+  // The new X-coordinate.
+  int32 pos_x = 3;
+  // The new Y-coordinate.
+  int32 pos_y = 4;
+}
+
+// Response after a move operation.
+message MoveTokenResponse{
+  // Indicates whether the move was successful.
+  bool success = 1;
+}
+
+
+// --- Event Messages for real-time synchronization ---
+
+// Event triggered when a new token is placed on a scene.
+message PlacedTokenCreated{
+  // The newly created token instance.
+  PlacedToken placed_token = 1;
+}
+
+// Event triggered when a placed token's properties are updated.
+message PlacedTokenUpdated{
+  // The token instance with its updated data.
+  PlacedToken placed_token = 1;
+}
+
+// Event triggered when a token is deleted from a scene.
+message PlacedTokenDeleted {
+  // The ID of the scene from which the token was deleted.
+  uint64 scene_id = 1;
+  // The ID of the token instance that was deleted.
+  uint64 placed_token_id = 2;
+}
+
+// Event triggered when a token is moved.
+message PlacedTokenMoved {
+  // The ID of the scene where the token moved.
+  uint64 scene_id = 1;
+  // The ID of the token instance that moved.
+  uint64 placed_token_id = 2;
+  // The new X-coordinate of the token.
+  int32 pos_x = 3;
+  // The new Y-coordinate of the token.
+  int32 pos_y = 4;
+}

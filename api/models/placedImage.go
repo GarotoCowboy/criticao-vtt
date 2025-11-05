@@ -7,8 +7,8 @@ import (
 
 type PlacedImage struct {
 	gorm.Model
-	PosX uint `json:"posX" gorm:"not null"`
-	PosY uint `json:"posY" gorm:"not null"`
+	PosX int32 `json:"posX" gorm:"not null"`
+	PosY int32 `json:"posY" gorm:"not null"`
 
 	ImageID uint   `json:"imageID" gorm:"not null"`
 	Image   *Image `json:"image" gorm:"not null"`
@@ -16,7 +16,7 @@ type PlacedImage struct {
 	SceneID uint   `json:"sceneID" gorm:"constraint:OnUpdate:CASCADE"`
 	Scene   *Scene `json:"scene" gorm:"constraint:OnUpdate:CASCADE"`
 
-	LayerType consts.LayerType `json:"layer_type"`
+	LayerType consts.LayerType `json:"layer_type" gorm:"not null;default:1"`
 	Rotation  int              `json:"rotation" gorm:"not null;default:0"`
 
 	Width  uint `json:"width" gorm:"not null"`

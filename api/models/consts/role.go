@@ -5,7 +5,8 @@ import "fmt"
 type Role uint8
 
 const (
-	Player = iota + 1
+	Unspecified Role = iota
+	Player
 	Master
 )
 

@@ -2,11 +2,13 @@ package router
 
 import (
 	"github.com/GarotoCowboy/vttProject/api/handler"
+	"github.com/GarotoCowboy/vttProject/api/handler/authhandler"
 	"github.com/GarotoCowboy/vttProject/api/handler/gameHandler"
 	"github.com/GarotoCowboy/vttProject/api/handler/tablehandler"
 	"github.com/GarotoCowboy/vttProject/api/handler/tableuserhandler"
 	"github.com/GarotoCowboy/vttProject/api/handler/uploadHandler"
 	"github.com/GarotoCowboy/vttProject/api/handler/userhandler"
+	"github.com/GarotoCowboy/vttProject/api/middleware"
 	_ "github.com/GarotoCowboy/vttProject/docs"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
@@ -19,40 +21,49 @@ func initializeRoutes(router *gin.Engine) {
 
 	var v1 = router.Group("api/v1")
 	{
-		//User Request
-		v1.GET("/user", userhandler.GetUserHandler)
-		v1.GET("/users", userhandler.ListUsersHandler)
+		//todo: Public routes
 		v1.POST("/user", userhandler.CreateUserHandler)
-		v1.DELETE("/user", userhandler.DeleteUserHandler)
-		v1.PUT("/user", userhandler.UpdateUserHandler)
-		v1.POST("/user/upload", userhandler.UploadUserImg)
+		v1.POST("/login", authhandler.LoginHandler)
 
-		//Table Requests
+		//todo: Authenticated routes
+		authenticated := v1.Group("/")
+		authenticated.Use(middleware.AuthMiddleware())
+		{
+			//todo:User Request
+			authenticated.GET("/user", userhandler.GetUserHandler)
+			authenticated.GET("/users", userhandler.ListUsersHandler)
 
-		v1.GET("/table", tablehandler.GetTableHandler)
-		v1.GET("/tables", tablehandler.ListTablesHandler)
-		v1.POST("/table", tablehandler.CreateTableHandler)
-		v1.DELETE("/table", tablehandler.DeleteTableHandler)
-		v1.PUT("/table", tablehandler.UpdateTableHandler)
-		////v1.POST("/userDTO/upload", userhandler.UploadUserImg)
-		//
-		////TableUser Requests
-		v1.GET("/tableUser", tableuserhandler.GetTableUserHandler)
-		v1.GET("/tablesUsers", tableuserhandler.ListTableUsersHandler)
-		v1.POST("/tableUser", tableuserhandler.CreateTableUserHandler)
-		v1.POST("/tableUser/inviteLink", tableuserhandler.CreateTableUserByInviteLinkHandler)
-		v1.DELETE("/tableUser", tableuserhandler.DeleteTableUserHandler)
-		//v1.PUT("/tableUser", table.UpdateUserHandler)
+			authenticated.DELETE("/user/me", userhandler.DeleteUserHandler)
+			authenticated.PUT("/user/me", userhandler.UpdateUserHandler)
+			authenticated.POST("/user/upload", userhandler.UploadUserImg)
 
-		//gameService
-		v1.POST("/:tableUser/rollDice", gameHandler.RollDiceHandler)
+			//todo:Table Requests
 
-		//v1.POST("/table/character",characterhandler.CreateCharacterHandler)
+			authenticated.GET("/table", tablehandler.GetTableHandler)
+			authenticated.GET("/tables", tablehandler.ListTablesHandler)
+			authenticated.POST("/table", tablehandler.CreateTableHandler)
+			authenticated.DELETE("/table", tablehandler.DeleteTableHandler)
+			authenticated.PUT("/table", tablehandler.UpdateTableHandler)
+			authenticated.POST("/table/:table_id/attachment", uploadHandler.UploadAttachmentsHandler)
+			//v1.POST("/userDTO/upload", userhandler.UploadUserImg)
+			//
+			//todo:TableUser Requests
+			authenticated.GET("/tableUser", tableuserhandler.GetTableUserHandler)
+			authenticated.GET("/tablesUsers", tableuserhandler.ListTableUsersHandler)
+			authenticated.POST("/tableUser", tableuserhandler.CreateTableUserHandler)
+			authenticated.POST("/tableUser/inviteLink", tableuserhandler.CreateTableUserByInviteLinkHandler)
+			authenticated.DELETE("/tableUser", tableuserhandler.DeleteTableUserHandler)
+			//v1.PUT("/tableUser", table.UpdateUserHandler)
+
+			//gameService
+			authenticated.POST("/tables/:tableID/roll", gameHandler.RollDiceHandler)
+
+			//v1.POST("/table/character",characterhandler.CreateCharacterHandler)
+		}
+
 	}
 
 	//utils
-	v1.POST("/util/upload/pdf", uploadHandler.UploadFilePDF)
-	v1.POST("/util/upload/audio", uploadHandler.UploadFileMP3)
 
 	//Swagger
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

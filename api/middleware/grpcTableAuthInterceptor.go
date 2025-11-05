@@ -21,7 +21,7 @@ func GrpcTableMemberInterceptor(db *gorm.DB) grpc.UnaryServerInterceptor {
 	) (interface{}, error) {
 		userID, ok := ctx.Value("user_id").(uint)
 		if !ok {
-			return nil, status.Error(codes.Internal, "user id is not in context")
+			return nil, status.Error(codes.Internal, "tableUser id is not in context")
 		}
 		tableReq, ok := req.(interfaces.TableRequest)
 		if !ok {
@@ -33,7 +33,7 @@ func GrpcTableMemberInterceptor(db *gorm.DB) grpc.UnaryServerInterceptor {
 
 		if err := db.Where("user_id = ? AND table_id = ?", userID, tableID).First(&tableUser).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
-				return nil, status.Errorf(codes.NotFound, "user does not have permission to access table %d", tableID)
+				return nil, status.Errorf(codes.NotFound, "tableUser does not have permission to access table %d", tableID)
 			}
 			return nil, status.Errorf(codes.Internal, "error checking table permissions")
 		}

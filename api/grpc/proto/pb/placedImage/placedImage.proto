@@ -1,0 +1,145 @@
+syntax = "proto3";
+
+package placedImage;
+
+option go_package = "github.com/GarotoCowboy/vttProject/api/grpc/pb/placedImage;placedImage";
+
+import "google/protobuf/field_mask.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+// The `PlacedImageService` manages image instances that are placed on a specific scene or map.
+service PlacedImageService{
+  // Creates a new image instance on a scene.
+  rpc CreatePlacedImage(CreatePlacedImageRequest)returns(CreatePlacedImageResponse);
+
+  // Edits the properties of an existing placed token.
+  rpc EditPlacedImage(EditPlacedImageRequest)returns(EditPlacedImageResponse);
+
+  // Deletes a image from a scene.
+  rpc DeletePlacedImage(DeletePlacedImageRequest)returns(google.protobuf.Empty);
+
+  // Lists all images currently on a specific scene.
+  rpc ListAllImagesOnScene(ListAllImagesRequest)returns(ListAllImagesResponse);
+
+  // Moves a image to a new position on the scene.
+  rpc MoveImage(MoveImageRequest)returns(MoveImageResponse);
+}
+
+message PlacedImage{
+  uint64 image_id = 1;
+  uint64 scene_id = 2;
+  uint64 placed_image_id = 3;
+  int32 pos_x = 4;
+  int32 pos_y = 5;
+  int32 rotation = 6;
+  uint64 width = 7;
+  uint64 height = 8;
+  LayerType layer = 9;
+  google.protobuf.Timestamp created_at = 10;
+  google.protobuf.Timestamp updated_at = 11;
+}
+
+enum LayerType{
+  // The default layer, visible to players and the GM.
+  PLAYER_LAYER = 0;
+  // The layer for map elements, typically below the player layer.
+  MAP_LAYER = 1;
+  // A layer only visible to the Game Master (GM).
+  MASTER_LAYER = 2;
+}
+
+
+message CreatePlacedImageRequest {
+  // The ID of the scene to place the image on.
+  uint64 scene_id = 1;
+  // The ID of the image template to use.
+  uint64 image_id = 2;
+  // The initial X-coordinate for the image.
+  int32 pos_x = 3;
+  // The initial Y-coordinate for the image.
+  int32 pos_y = 4;
+
+  uint64 width = 5;
+  uint64 height = 6;
+}
+message CreatePlacedImageResponse {
+  PlacedImage placed_image = 1;
+}
+message EditPlacedImageRequest {
+  PlacedImage placed_image = 1;
+  google.protobuf.FieldMask mask = 2;
+}
+message EditPlacedImageResponse {
+  PlacedImage placed_image = 1;
+}
+
+message DeletePlacedImageRequest {
+  // The unique ID of the image instance to delete.
+  uint64 placed_image_id = 1;
+  // The ID of the scene the image belongs to, for validation.
+  uint64 scene_id = 2;
+}
+
+message ListAllImagesRequest {
+  uint64 scene_id = 1;
+}
+
+message ListAllImagesResponse {
+  repeated  PlacedImage placed_image = 1;
+}
+
+message MoveImageRequest {
+  // The ID of the scene where the move is happening.
+  uint64 scene_id = 1;
+  // The ID of the image instance being moved.
+  uint64 placed_image_id = 2;
+  // The new X-coordinate.
+  int32 pos_x = 3;
+  // The new Y-coordinate.
+  int32 pos_y = 4;
+}
+
+message MoveImageResponse {
+  bool success = 1;
+}
+
+
+// --- Event Messages for real-time synchronization ---
+
+// Event triggered when a new image is placed on a scene.
+message PlacedImageCreated{
+  // The newly created image instance.
+  PlacedImage placed_image = 1;
+}
+
+// Event triggered when a placed image's properties are updated.
+message PlacedImageUpdated{
+  // The token instance with its updated data.
+  PlacedImage placed_image = 1;
+}
+
+// Event triggered when a image is deleted from a scene.
+message PlacedImageDeleted {
+  // The ID of the scene from which the image was deleted.
+  uint64 scene_id = 1;
+  // The ID of the image instance that was deleted.
+  uint64 placed_image_id = 2;
+}
+
+// Event triggered when a image is moved.
+message PlacedImageMoved {
+  // The ID of the scene where the image moved.
+  uint64 scene_id = 1;
+  // The ID of the image instance that moved.
+  uint64 placed_image_id = 2;
+  // The new X-coordinate of the image.
+  int32 pos_x = 3;
+  // The new Y-coordinate of the image.
+  int32 pos_y = 4;
+}
+
+
+
+
+

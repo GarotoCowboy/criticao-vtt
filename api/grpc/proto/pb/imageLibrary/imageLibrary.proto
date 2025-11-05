@@ -1,0 +1,145 @@
+syntax = "proto3";
+
+package image_library;
+
+option go_package = "github.com/GarotoCowboy/vttProject/api/grpc/pb/imageLibrary;imageLibrary";
+
+import "google/protobuf/field_mask.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+// The `ImageLibraryService` handles all operations related to managing images for tables.
+service ImageLibraryService{
+  // Uploads an image using a client-side stream to handle large files efficiently.
+  rpc UploadImage(stream UploadImageRequest) returns (UploadImageResponse);
+
+  // Edits the metadata of an existing image (e.g., its name).
+  rpc EditImage(EditImageRequest) returns(Image);
+
+  // Deletes an image from the library.
+  rpc DeleteImage(DeleteImageRequest) returns (google.protobuf.Empty);
+
+  // Lists all images associated with a specific table using pagination.
+  rpc ListImages(ListImagesRequest) returns (ListImagesResponse);
+}
+
+// Represents a single image and its metadata in the library.
+message Image{
+  // The ID of the table this image belongs to.
+  uint64 table_id = 1;
+  // The unique identifier for the image.
+  uint64 image_id = 2;
+  // The public URL where the image can be accessed.
+  string image_url = 3;
+  // The user-defined name for the image file.
+  string name = 4;
+  // The width of the image in pixels.
+  uint32 width = 5;
+  // The height of the image in pixels.
+  uint32 height = 6;
+  // The MIME type of the image (e.g., "image/png", "image/jpeg").
+  string content_type = 7;
+  // A checksum (e.g., MD5, SHA256) of the image data for integrity verification.
+  string checksum = 8;
+  // Timestamp of when the image was originally created.
+  google.protobuf.Timestamp created_at = 9;
+  // Timestamp of the last update to the image's metadata.
+  google.protobuf.Timestamp updated_at = 10;
+}
+
+// --- Upload Messages ---
+
+// A streaming request for uploading an image.
+// The client must send an `init` message first, followed by one or more `chunk` messages.
+message UploadImageRequest{
+  oneof msg {
+    // The initial metadata message. MUST be the first message in the stream.
+    UploadInit init = 1;
+    // A chunk of the image's binary data.
+    UploadChunk chunk = 2;
+  }
+}
+
+// The initial message in an upload stream, containing the image's metadata.
+message UploadInit{
+  // The ID of the table to associate the image with.
+  uint64 table_id = 1;
+  // The name of the image file.
+  string name = 2;
+  // The MIME type of the image.
+  string content_type = 3;
+}
+
+// A message containing a chunk of the image's binary data.
+message UploadChunk{
+  // A slice of bytes representing a part of the image file.
+  bytes data = 1;
+}
+
+// The response sent by the server after the upload stream is completed successfully.
+message UploadImageResponse{
+  // The complete `Image` object, including the server-generated URL and other metadata.
+  Image image = 1;
+}
+
+// --- Edit Messages ---
+
+// Request to edit an existing image's metadata.
+message EditImageRequest{
+  // An `Image` object containing the new data. The `image_id` must be specified.
+  Image image = 1;
+  // A field mask to specify which fields should be updated (e.g., "name").
+  google.protobuf.FieldMask mask = 2;
+}
+
+// --- Delete Messages ---
+
+// Request to delete an image.
+message DeleteImageRequest{
+  // The ID of the image to be deleted.
+  uint64 image_id = 1;
+  // The ID of the table the image belongs to, for validation.
+  uint64 table_id = 2;
+}
+
+// --- List Messages ---
+
+// Request to list images for a table.
+message ListImagesRequest{
+  // The ID of the table whose images should be retrieved.
+  uint64 table_id = 1;
+  // The maximum number of images to return per page.
+  uint32 page_size = 2;
+  // A token for retrieving a specific page of results. Use the `next_page_token` from a previous response.
+  string page_token = 3;
+}
+
+// Response containing a paginated list of images.
+message ListImagesResponse{
+  // The list of images for the requested page.
+  repeated Image images = 1;
+  // A token to be used in the next request to fetch the subsequent page. If empty, there are no more results.
+  string next_page_token = 2;
+}
+
+// --- Event Messages for real-time synchronization ---
+
+// Event triggered when a new image has been successfully uploaded.
+message ImageUploaded{
+  // The newly created image object.
+  Image image = 1;
+}
+
+// Event triggered when an image's metadata has been updated.
+message ImageUpdated{
+  // The image object with its updated data.
+  Image image = 1;
+}
+
+// Event triggered when an image has been deleted.
+message ImageDeleted{
+  // The ID of the image that was deleted.
+  uint64 image_id = 1;
+  // The ID of the table the image belonged to.
+  uint64 table_id = 2;
+}

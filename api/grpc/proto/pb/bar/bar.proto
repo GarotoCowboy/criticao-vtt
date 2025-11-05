@@ -1,0 +1,132 @@
+syntax = "proto3";
+
+package bar;
+
+option go_package = "github.com/GarotoCowboy/vttProject/api/grpc/pb/bar;bar";
+
+import "google/protobuf/field_mask.proto";
+
+// The `BarService` manages operations for "bars" (e.g., health, mana) associated with tokens.
+service BarService{
+  // Creates a new bar for a specific token.
+  rpc CreateBar(CreateBarRequest) returns (CreateBarResponse);
+
+  // Edits an existing bar using a field mask for partial updates.
+  rpc EditBar(EditBarRequest) returns (EditBarResponse);
+
+  // Deletes a bar.
+  rpc DeleteBar(DeleteBarRequest) returns (DeleteBarResponse);
+
+  // Retrieves all bars associated with a given token.
+  rpc GetBarsForToken(GetBarForTokenRequest) returns (GetBarsForTokenResponse);
+}
+
+// Represents a single bar with its properties.
+message Bar{
+  // The unique identifier for the bar.
+  uint64 bar_id = 1;
+  // The ID of the token this bar belongs to.
+  uint64 token_id = 2;
+  // The name of the bar (e.g., "Health", "Stamina").
+  string name = 3;
+  // The current value of the bar.
+  int32 value = 4;
+  // The maximum possible value for the bar.
+  int32 max_value = 5;
+  // A string representing the color of the bar, e.g., a hex code like "#FF0000".
+  string color = 6;
+}
+
+// Request to create a new bar.
+message CreateBarRequest{
+  // The ID of the token to which the new bar will be attached.
+  uint64 token_id = 1;
+  // The name for the new bar.
+  string name = 2;
+  // The initial value of the bar.
+  int32 value = 3;
+  // The maximum value of the bar.
+  int32 max_value = 4;
+  // The color for the new bar.
+  string color = 5;
+}
+
+// Response after creating a bar, containing the newly created bar object.
+message CreateBarResponse{
+  // The complete bar object as it was created.
+  Bar bar = 1;
+}
+
+// Request to edit an existing bar.
+message EditBarRequest{
+  // The bar object containing the new data. Only fields specified in the mask will be updated.
+  Bar bar = 1;
+  // A field mask to specify which fields of the bar should be updated.
+  // This allows for partial updates (e.g., only changing the 'value').
+  google.protobuf.FieldMask mask = 2;
+}
+
+// Response after editing a bar, containing the full updated bar object.
+message EditBarResponse{
+  // The bar object with the applied updates.
+  Bar bar = 1;
+}
+
+// Request to delete a bar.
+message DeleteBarRequest{
+  // The unique ID of the bar to be deleted.
+  uint64 bar_id = 1;
+  // The ID of the token the bar belongs to, for validation.
+  uint64 token_id = 2;
+}
+
+// Response after a delete operation.
+message DeleteBarResponse{
+  // Indicates whether the deletion was successful.
+  bool success = 1;
+  // A status code or string for the operation's result (e.g., "SUCCESS", "NOT_FOUND").
+  string message_status = 2;
+  // A human-readable message describing the outcome.
+  string message = 3;
+}
+
+// Request to get all bars for a token.
+message GetBarForTokenRequest{
+  // The ID of the token whose bars should be retrieved.
+  uint64 token_id = 1;
+}
+
+// Response containing a list of bars for a specific token.
+message GetBarsForTokenResponse{
+  // A list of all bars associated with the requested token.
+  repeated Bar bars = 1;
+}
+
+// Event Messages for real-time synchronization.
+
+// Event triggered when a bar's values (current or max) are updated.
+message BarValuesUpdated{
+  // The bar with its updated values.
+  Bar bar = 1;
+}
+
+// Event triggered when a new bar is created.
+message BarCreated{
+  // The newly created bar object.
+  Bar bar = 1;
+}
+
+// Event triggered when a bar is deleted.
+message BarDeleted{
+  // The ID of the bar that was deleted.
+  uint64 bar_id = 1;
+  // The ID of the token the bar belonged to.
+  uint64 token_id = 2;
+}
+
+// Event triggered for any general update to a bar's properties (e.g., name, color).
+// Note: This could potentially overlap with BarValuesUpdated.
+message BarUpdated{
+  // The bar with its updated data.
+  Bar bar = 1;
+}

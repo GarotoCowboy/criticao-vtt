@@ -22,7 +22,7 @@ func Roll(numDice, sides int, bonuses []int, tableID, userID uint, db *gorm.DB) 
 	var membership models.TableUser
 	if err := db.Where("table_id = ? AND user_id = ?", tableID, userID).First(&membership).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New("user is not a member of this table")
+			return nil, errors.New("tableUser is not a member of this table")
 		}
 		return nil, err
 	}

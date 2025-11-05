@@ -34,7 +34,7 @@ func CreateTableUserHandler(ctx *gin.Context) {
 	tableUser, err := tableUserService.CreateTableUser(handler.GetHandlerDB(), request)
 
 	if err != nil {
-		handler.GetHandlerLogger().ErrorF("Error creating user: %v", err.Error())
+		handler.GetHandlerLogger().ErrorF("Error creating tableUser: %v", err.Error())
 		handler.SendError(ctx, http.StatusInternalServerError, err.Error())
 		return
 	}

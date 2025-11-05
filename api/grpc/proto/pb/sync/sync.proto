@@ -4,58 +4,95 @@ package sync;
 
 option go_package = "github.com/GarotoCowboy/vttProject/api/grpc/pb/sync;sync";
 
+// Import definitions from all other services whose events will be synchronized.
 import "pb/bar/bar.proto";
 import "pb/token/token.proto";
 import "pb/scene/scene.proto";
 import "pb/imageLibrary/imageLibrary.proto";
 import "pb/placedToken/placedToken.proto";
+import "pb/permission/permission.proto";
+import "pb/chat/chat.proto";
+import "pb/tableUser/tableUser.proto";
+import "pb/placedImage/placedImage.proto";
 
+// The `SyncService` provides a real-time, bidirectional stream for synchronizing
+// game state between the server and connected clients.
 service SyncService{
+  // Establishes a persistent connection. The client sends an initial SyncRequest
+  // to subscribe to updates, and the server continuously streams SyncResponse
+  // messages with real-time events as they occur.
   rpc Sync(stream SyncRequest) returns (stream SyncResponse);
 }
 
+// The initial message sent by a client to begin a sync session.
 message SyncRequest{
+  // The specific scene the client is currently viewing. Events specific to this scene will be prioritized.
   uint64 scene_id = 1;
+  // The table (or game session) the client is part of. The client will receive all table-wide events.
   uint64 table_id = 2;
+  // The authentication token of the user to validate the session.
   string auth_token = 3;
-
 }
 
-// Add the actions here to sync.
+// A message streamed from the server to the client, containing a single state-changing event.
 message SyncResponse{
+  // The ID of the scene this event is primarily associated with, if applicable.
   uint64 scene_id = 1;
+  // The ID of the table this event belongs to.
   uint64 table_id = 2;
 
+  // An event payload. Only one of these fields will be set per message,
+  // indicating exactly what action occurred.
   oneof action{
-    //todo SCENE SCOPE
+    // --- SCENE-SCOPED EVENTS (Actions happening on a specific map) ---
 
-    //placedToken
+    // PlacedToken Events
     placedToken.PlacedTokenCreated placed_token_created = 3;
     placedToken.PlacedTokenUpdated placed_token_updated = 4;
     placedToken.PlacedTokenMoved placed_token_moved = 5;
     placedToken.PlacedTokenDeleted placed_token_deleted = 6;
 
-    //todo TABLE SCOPE
+    // Permission Events for Placed Objects
+    permission.PlacedObjectAccessUpdated placed_object_access_updated = 7;
 
-    //scene
-    scene.SceneCreated scene_created = 7;
+    // --- TABLE-SCOPED EVENTS (Actions affecting the entire game session) ---
+
+    // Scene Events
+    scene.SceneCreated scene_created = 9;
     scene.SceneUpdated scene_updated = 8;
-    scene.SceneDeleted scene_deleted = 9;
+    scene.SceneDeleted scene_deleted = 10;
 
-    //token
-    token.TokenCreated token_created = 10;
-    token.TokenDeleted token_deleted = 11;
-    token.TokenUpdated token_updated = 12;
+    // Token Library Events
+    token.TokenCreated token_created = 11;
+    token.TokenDeleted token_deleted = 12;
+    token.TokenUpdated token_updated = 13;
 
-    //bar
-    bar.BarValuesUpdated bar_value_updated = 13;
-    bar.BarCreated bar_created = 14;
-    bar.BarDeleted bar_deleted = 15;
-    bar.BarUpdated bar_update = 16;
+    // Bar Events (for tokens)
+    bar.BarValuesUpdated bar_value_updated = 14;
+    bar.BarCreated bar_created = 15;
+    bar.BarDeleted bar_deleted = 16;
+    bar.BarUpdated bar_update = 17;
 
-    //imageLibrary
-    image_library.ImageUploaded image_uploaded = 17;
-    image_library.ImageUpdated image_updated = 18;
-    image_library.ImageDeleted image_deleted = 19;
+    // Image Library Events
+    image_library.ImageUploaded image_uploaded = 18;
+    image_library.ImageUpdated image_updated = 19;
+    image_library.ImageDeleted image_deleted = 20;
+
+    // Permission Events for Library Objects
+    permission.LibraryObjectVisibilityUpdated library_object_visiblity_updated = 21;
+
+    // Chat Events
+    chat.ChatMessageSent message_sended = 22;
+    chat.ChatMessageUpdated message_updated = 23;
+    chat.ChatMessageDeleted message_deleted = 24;
+
+    //tableUser events
+    tableUser.PromotedOrDemotedUserEvent user_promoted_demoted = 25;
+
+    //placedImage events
+    placedImage.PlacedImageCreated placed_image_created = 26;
+    placedImage.PlacedImageUpdated placed_image_updated = 27;
+    placedImage.PlacedImageMoved placed_image_moved = 28;
+    placedImage.PlacedImageDeleted placed_image_deleted = 29;
   }
 }

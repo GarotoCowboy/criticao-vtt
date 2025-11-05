@@ -1,0 +1,92 @@
+syntax = "proto3";
+
+package permission;
+
+option go_package = "github.com/GarotoCowboy/vttProject/api/grpc/pb/permission;permission";
+
+import "google/protobuf/empty.proto";
+
+// The `PermissionService` handles access control for various in-game objects.
+service PermissionService{
+  // Updates who can view and modify an object that has been placed on the table (e.g., a token on the map).
+  rpc UpdatePlacedObjectAccess(UpdatePlacedObjectAccessRequest) returns(google.protobuf.Empty);
+  // Updates the visibility of an object within a shared library (e.g., making a token visible to all players in the token library).
+  rpc UpdateLibraryObjectVisibility(UpdateLibraryObjectVisibilityRequest)returns(google.protobuf.Empty);
+}
+
+// Defines the different levels of permission for an action.
+enum Permissionlevel{
+  // The permission level is not specified. Should be treated as an error or default to the most restrictive setting.
+  PERMISSION_LEVEL_UNSPECIFIED = 0;
+  // Only the Game Master can perform the action.
+  PERMISSION_MASTER = 1;
+  // The Game Master and any explicitly assigned owners can perform the action.
+  PERMISSION_OWNERS_AND_MASTERS = 2;
+  // All players in the session can perform the action.
+  PERMISSION_ALL_PLAYERS = 3;
+}
+
+enum GameObjectType{
+  OBJECT_TYPE_UNSPECIFIED = 0;
+  TOKEN = 1;
+  IMAGE = 2;
+}
+
+// Request to update the access permissions for an object placed on the table.
+message UpdatePlacedObjectAccessRequest{
+  // The unique ID of the placed object instance.
+  uint64 object_id = 1;
+  // The type of the placed object (e.g., PLACED_TOKEN).
+  GameObjectType object_type = 2;
+  // The new permission level for who can modify the object.
+  optional Permissionlevel can_be_modified_by = 3;
+  // A list of directives to manage the owner list, e.g., "add:user_id_1", "remove:user_id_2".
+  repeated uint64 owner_user_ids = 4;
+  // The new permission level for who can view the object.
+  optional Permissionlevel can_be_viewed_by = 5;
+}
+
+// Response for an `UpdatePlacedObjectAccess` request.
+message UpdatePlacedObjectAccessResponse{
+  // Indicates whether the update was successful.
+  bool success = 1;
+  // A human-readable message describing the outcome.
+  string message = 2;
+}
+
+// Request to update the visibility of an object within a library.
+message UpdateLibraryObjectVisibilityRequest{
+  // The unique ID of the library object.
+  uint64 object_id = 1;
+  // The type of the library object (e.g., TOKEN, IMAGE).
+  GameObjectType object_type = 2;
+  // The new visibility level for the object in the library.
+  Permissionlevel visibility = 3;
+}
+
+
+// --- Event Messages for real-time synchronization ---
+
+// Event triggered when access permissions for a placed object are updated.
+message PlacedObjectAccessUpdated{
+  // ID of the affected object instance.
+  uint64 object_id = 1;
+  // Type of the affected object.
+  GameObjectType object_type = 2;
+  // The new permission level for modification.
+  Permissionlevel can_be_modified_by = 3;
+  // The new permission level for viewing.
+  Permissionlevel can_be_viewed_by = 4;
+  // The complete, updated list of user IDs who are owners of this object.
+  repeated uint64 owner_user_ids = 5;
+}
+
+// Event triggered when the visibility of a library object is updated.
+message LibraryObjectVisibilityUpdated{
+  // ID of the affected library object.
+  uint64 object_id = 1;
+  // Type of the affected object.
+  GameObjectType object_type = 2;
+  // The new visibility level in the library.
+  Permissionlevel visibility = 3;
+}

@@ -17,11 +17,11 @@ import (
 // @Tags User
 // @Accept json
 // @Produce json
-// @Param user body userDTO.CreateUserRequest true "User data"
+// @Param tableUser body userDTO.CreateUserRequest true "User data"
 // @Success 200 {object} userDTO.UserResponse "User Created sucessfully"
 // @Failure 400 {object} userDTO.ErrorResponse "Bad request error"
 // @Failure 500 {object} userDTO.ErrorResponse "Internal Server Error"
-// @Router /user [post]
+// @Router /tableUser [post]
 func CreateUserHandler(ctx *gin.Context) {
 
 	// Initialize an empty struct to hold the incoming JSON request data
@@ -35,11 +35,11 @@ func CreateUserHandler(ctx *gin.Context) {
 		return
 	}
 
-	// Call the user service to create a new user using the validated request data
+	// Call the tableUser service to create a new tableUser using the validated request data
 	// If the service returns an error, log it and return 500 Internal Server Error
 	user, err := userService.CreateUser(handler.GetHandlerDB(), request)
 	if err != nil {
-		handler.GetHandlerLogger().ErrorF("Error creating user: %v", err.Error())
+		handler.GetHandlerLogger().ErrorF("Error creating tableUser: %v", err.Error())
 		handler.SendError(ctx, http.StatusInternalServerError, err.Error())
 		return
 	}

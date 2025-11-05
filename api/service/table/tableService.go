@@ -2,6 +2,7 @@ package table
 
 import (
 	"errors"
+
 	"github.com/GarotoCowboy/vttProject/api/dto/tableDTO"
 	"github.com/GarotoCowboy/vttProject/api/models"
 	"github.com/GarotoCowboy/vttProject/api/models/consts"
@@ -9,7 +10,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func CreateTable(db *gorm.DB, req tableDTO.CreateTableRequest) (models.Table, error) {
+func CreateTable(db *gorm.DB, ownerID uint, req tableDTO.CreateTableRequest) (models.Table, error) {
 
 	//Validate if request bod is valid
 	if err := req.Validate(); err != nil {
@@ -24,7 +25,7 @@ func CreateTable(db *gorm.DB, req tableDTO.CreateTableRequest) (models.Table, er
 	var table = models.Table{
 		Name:     req.Name,
 		Password: req.Password,
-		OwnerID:  req.OwnerID,
+		OwnerID:  ownerID,
 	}
 	table.InviteLink = generatedInviteLink
 
@@ -43,7 +44,7 @@ func CreateTable(db *gorm.DB, req tableDTO.CreateTableRequest) (models.Table, er
 
 	ownerMember := models.TableUser{
 		TableID: table.ID,
-		UserID:  req.OwnerID,
+		UserID:  ownerID,
 		Role:    consts.Role(2),
 	}
 
@@ -58,38 +59,59 @@ func CreateTable(db *gorm.DB, req tableDTO.CreateTableRequest) (models.Table, er
 	return fullTable, nil
 }
 
-func DeleteTable(db *gorm.DB, id uint) (models.Table, error) {
+func DeleteTable(db *gorm.DB, tableID, userID uint) (models.Table, error) {
 
-	//Verify if id is valid
-	if id == 0 {
+	//Verify if tableID is valid
+	if tableID == 0 {
 		return models.Table{}, errors.New("invalid table_id")
+	}
+
+	var tableUserModel = models.TableUser{}
+
+	if err := db.Where("table_id = ? AND user_id = ?", tableID, userID).First(&tableUserModel).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return models.Table{}, errors.New("tableUser is not a member of this table")
+		}
+	}
+	if tableUserModel.Role != 2 {
+		return models.Table{}, errors.New("only masters can delete a table")
 	}
 
 	var table = models.Table{}
 
 	//Preload all members registred at table
-	if err := db.Preload("Members").First(&table, id).Error; err != nil {
+	if err := db.Preload("Members").First(&table, tableID).Error; err != nil {
 		return models.Table{}, err
 	}
+
 	//Select all members
 	if err := db.Select("Members").Delete(&table).Error; err != nil {
 		return models.Table{}, err
 	}
-	//Delete table and members with inputted id
+	//Delete table and members with inputted tableID
+
 	if err := db.Delete(&table).Error; err != nil {
 		return models.Table{}, err
 	}
 	return table, nil
 }
 
-func GetTable(db *gorm.DB, id uint) (models.Table, error) {
-	if id <= 0 {
+func GetTable(db *gorm.DB, tableID, userID uint) (models.Table, error) {
+	if tableID == 0 {
 		return models.Table{}, errors.New("invalid table_id")
+	}
+
+	var membership models.TableUser
+	if err := db.Where("table_id = ? AND user_id = ?", tableID, userID).First(&membership).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return models.Table{}, errors.New("table not found")
+		}
+		return models.Table{}, err
 	}
 
 	var table = models.Table{}
 
-	if err := db.Preload("Owner").Where("id = ?", id).First(&table).Error; err != nil {
+	if err := db.Preload("Owner").Where("id = ?", tableID).First(&table).Error; err != nil {
 
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return models.Table{}, errors.New("table not found")
@@ -100,23 +122,42 @@ func GetTable(db *gorm.DB, id uint) (models.Table, error) {
 	return table, nil
 }
 
-func ListTables(db *gorm.DB) ([]models.Table, error) {
+func ListTables(db *gorm.DB, userID uint) ([]models.Table, error) {
 
 	var tables []models.Table
 
-	if err := db.Preload("Owner").Find(&tables).Error; err != nil {
-		return tables, err
+	if err := db.Joins("JOIN table_users ON table_users.table_id = tables.id").
+		Where("table_users.user_id = ?", userID).
+		Find(&tables).Error; err != nil {
+		return nil, err
 	}
+
+	//if err := db.Preload("Owner").Find(&tables).Error; err != nil {
+	//	return tables, err
+	//}
 	return tables, nil
 }
 
-func UpdateTable(db *gorm.DB, id uint, req tableDTO.UpdateTableRequest) (models.Table, error) {
+func UpdateTable(db *gorm.DB, tableID, userID uint, req tableDTO.UpdateTableRequest) (models.Table, error) {
 
-	if id == 0 {
+	if tableID == 0 {
 		return models.Table{}, errors.New("invalid table_id")
 	}
 
-	tableData, err := GetTable(db, id)
+	var tableUser models.TableUser
+
+	if err := db.Where("table_id = ? AND user_id = ?", tableID, userID).First(&tableUser).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return models.Table{}, errors.New("tableUser is not a member of this table")
+		}
+		return models.Table{}, err
+	}
+
+	if tableUser.Role != 2 {
+		return models.Table{}, errors.New("only masters can change a table")
+	}
+
+	tableData, err := GetTable(db, tableID, userID)
 	if err != nil {
 		return models.Table{}, err
 	}

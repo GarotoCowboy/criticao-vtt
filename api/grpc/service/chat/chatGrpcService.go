@@ -21,52 +21,59 @@ import (
 )
 
 func (s *ChatService) SendMessage(ctx context.Context, req *chat.SendMessageRequest) (*emptypb.Empty, error) {
-	s.Logger.InfoF("Starting GPRC to SendMessage")
+	s.Logger.InfoF("Starting GPRC to SendMessage for table %d", req.TableId)
 
+	// --- 1. Authentication: Get UserID from context ---
 	userIDFromCtx := ctx.Value("user_id")
-
 	userID, ok := userIDFromCtx.(uint)
 	if !ok {
 		s.Logger.ErrorF("UserID not found in context")
 		return nil, status.Errorf(codes.Internal, "error processing user identity")
 	}
 
+	// --- 2. Validation: Check request payload ---
 	if err := Validate(req); err != nil {
-		s.Logger.ErrorF("Validation error: %v", err)
+		s.Logger.ErrorF("Validation error for SendMessage request: %v", err)
 		return nil, status.Errorf(codes.InvalidArgument, err.Error())
 	}
 
+	// --- 3. Authorization: Verify user is a member of the table ---
+	s.Logger.InfoF("Authorizing: checking if user %d is a member of table %d", userID, req.TableId)
 	var tableUserModel models.TableUser
-
+	// Preload User to get the username for the event payload later
 	if err := s.Db.WithContext(ctx).Preload("User").Where("user_id = ? AND table_id = ?", userID, req.TableId).First(&tableUserModel).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			s.Logger.ErrorF("user is not in a table ")
-			return nil, status.Errorf(codes.NotFound, "user is not in a table ")
+			s.Logger.ErrorF("Authorization failed: User %d is not in table %d", userID, req.TableId)
+			return nil, status.Errorf(codes.NotFound, "user is not in this table")
 		}
-		s.Logger.ErrorF("database error: %v", err.Error())
+		s.Logger.ErrorF("Database error checking user membership: %v", err.Error())
 		return nil, status.Errorf(codes.Internal, "internal error")
 	}
 
+	// --- 4. Process Attachments ---
 	var attachmentsJSON datatypes.JSON
 	if len(req.Attachments) > 0 {
+		s.Logger.InfoF("Marshaling %d attachments to JSON", len(req.Attachments))
 		jsonBytes, err := json.Marshal(req.GetAttachments())
 		if err != nil {
-			s.Logger.ErrorF("json marshal error: %v", err.Error())
+			s.Logger.ErrorF("JSON marshal error for attachments: %v", err.Error())
 			return nil, status.Errorf(codes.Internal, "failed to process attachments")
 		}
 		attachmentsJSON = jsonBytes
 	}
 
+	// --- 5. Create Message Model ---
 	chatMessageModel := models.ChatMessage{
-		TableUserID:   tableUserModel.ID,
-		TableID:       tableUserModel.TableID,
+		TableUserID:   tableUserModel.ID,      // ID of the TableUser link
+		TableID:       tableUserModel.TableID, // Table ID for partitioning
 		Message:       req.GetMessageText(),
 		MessageType:   consts.MessageType(req.GetMessageType()),
-		MessageStatus: consts.MessageStatus(chat.MessageStatus_SENT),
+		MessageStatus: consts.MessageStatus(chat.MessageStatus_SENT), // Set initial status
 		Attachments:   attachmentsJSON,
 		CreatedAt:     time.Now(),
 		UpdatedAt:     time.Now(),
 	}
+	// Add optional fields
 	if req.MediaUrl != nil {
 		chatMessageModel.MediaURL = req.MediaUrl
 	}
@@ -74,17 +81,20 @@ func (s *ChatService) SendMessage(ctx context.Context, req *chat.SendMessageRequ
 		chatMessageModel.ReplyToMessageId = req.ReplyToMessageId
 	}
 
+	// --- 6. Save to Database ---
+	s.Logger.InfoF("Saving new message to database...")
 	if err := s.Db.WithContext(ctx).Create(&chatMessageModel).Error; err != nil {
 		s.Logger.ErrorF("Database error creating message: %v", err)
 		return nil, status.Errorf(codes.Internal, "could not save message")
 	}
 	s.Logger.InfoF("Message %s saved to database for table %d", chatMessageModel.ID, req.TableId)
 
+	// --- 7. Prepare and Publish Event ---
 	respProto := &chat.ChatMessageResponse{
 		MessageUuid:      chatMessageModel.ID.String(),
 		TableId:          req.GetTableId(),
 		SenderId:         uint64(tableUserModel.ID),
-		SenderUsername:   tableUserModel.User.Username,
+		SenderUsername:   tableUserModel.User.Username, // Got this from Preload
 		MessageText:      chatMessageModel.Message,
 		MessageType:      req.GetMessageType(),
 		MessageStatus:    chat.MessageStatus_SENT,
@@ -94,6 +104,7 @@ func (s *ChatService) SendMessage(ctx context.Context, req *chat.SendMessageRequ
 		ReplyToMessageId: req.ReplyToMessageId,
 	}
 
+	// Create the sync event payload
 	syncMsg := &syncBroker.SyncResponse{
 		TableId: req.GetTableId(),
 		Action: &syncBroker.SyncResponse_MessageSended{
@@ -103,18 +114,23 @@ func (s *ChatService) SendMessage(ctx context.Context, req *chat.SendMessageRequ
 		},
 	}
 
+	// Publish to the table-specific channel
 	s.Broker.Publish(pubSubSyncConst.TableSync, req.GetTableId(), syncMsg)
 	s.Logger.InfoF("Published ChatMessageSent event to broker for table %d", req.TableId)
 
 	return &emptypb.Empty{}, nil
 }
+
 func (s *ChatService) ListMessages(ctx context.Context, req *chat.ListMessagesRequest) (*chat.ListChatMessageResponse, error) {
 	s.Logger.InfoF("gRPC ChatService: ListMessages initiated for table %d", req.TableId)
 
+	// --- 1. Validation ---
 	if req.GetTableId() == 0 {
+		s.Logger.ErrorF("Invalid request: table_id is required")
 		return nil, status.Errorf(codes.InvalidArgument, "table_id is required")
 	}
 
+	// --- 2. Authentication ---
 	userIDFromCtx := ctx.Value("user_id")
 	userID, ok := userIDFromCtx.(uint)
 	if !ok {
@@ -122,26 +138,43 @@ func (s *ChatService) ListMessages(ctx context.Context, req *chat.ListMessagesRe
 		return nil, status.Errorf(codes.Internal, "error processing user identity")
 	}
 
+	// --- 3. Authorization: Verify user is a member ---
+	s.Logger.InfoF("Authorizing: checking if user %d is a member of table %d", userID, req.TableId)
 	var count int64
+	// Efficient check without fetching the full model
 	s.Db.WithContext(ctx).Model(&models.TableUser{}).Where("user_id = ? AND table_id = ?", userID, req.TableId).Count(&count)
 	if count == 0 {
-		s.Logger.ErrorF("Authorization error: user %d is not a member of table %d", userID, req.TableId)
+		s.Logger.ErrorF("Authorization error: User %d is not a member of table %d", userID, req.TableId)
 		return nil, status.Errorf(codes.PermissionDenied, "user is not a member of the specified table")
 	}
 
+	// --- 4. Pagination Setup ---
 	pageSize := req.GetPageSize()
 	if pageSize <= 0 || pageSize > 100 {
-		pageSize = 1
+		s.Logger.WarningF("Invalid page size %d, defaulting to 25", pageSize)
+		pageSize = 25 // Default page size
 	}
 
+	// --- 5. Database Query ---
+	s.Logger.InfoF("Fetching messages for table %d, page size %d", req.TableId, pageSize)
 	var messages []models.ChatMessage
+	// Base query: get messages for the table, preload sender's user info, order by newest first
+	query := s.Db.WithContext(ctx).
+		Preload("TableUser.User"). // Preload user info through TableUser
+		Where("table_id = ?", req.GetTableId()).
+		Order("created_at DESC").
+		Limit(int(pageSize))
 
-	query := s.Db.WithContext(ctx).Preload("TableUser.User").Where("table_id = ?", req.GetTableId()).Order("created_at DESC").Limit(int(pageSize))
-
+	// Cursor-based pagination: if a cursor is provided
 	if req.GetLastMessageId() != "" {
+		s.Logger.InfoF("Using cursor: fetching messages created before message %s", req.GetLastMessageId())
 		var cursorMessage models.ChatMessage
+		// Find the cursor message to get its creation time
 		if err := s.Db.First(&cursorMessage, "id = ?", req.GetLastMessageId()).Error; err == nil {
+			// Add to query: only get messages *older* than the cursor
 			query = query.Where("created_at < ?", cursorMessage.CreatedAt)
+		} else {
+			s.Logger.WarningF("Could not find cursor message %s, ignoring cursor", req.GetLastMessageId())
 		}
 	}
 
@@ -150,24 +183,26 @@ func (s *ChatService) ListMessages(ctx context.Context, req *chat.ListMessagesRe
 		return nil, status.Errorf(codes.Internal, "failed to retrieve messages")
 	}
 
+	// --- 6. Process Results ---
+	s.Logger.InfoF("Found %d messages, processing response...", len(messages))
 	respMessages := make([]*chat.ChatMessageResponse, 0, len(messages))
 
 	for _, msg := range messages {
-
+		// Process attachments from JSON
 		var attachments []string
 		if msg.Attachments != nil {
 			if err := json.Unmarshal(msg.Attachments, &attachments); err != nil {
 				s.Logger.ErrorF("Failed to unmarshal attachments for message %s: %v", msg.ID, err)
-
-				continue
+				// Don't fail the whole request, just skip attachments for this message
 			}
 		}
 
+		// Build the protobuf response message
 		respMsg := &chat.ChatMessageResponse{
 			MessageUuid:      msg.ID.String(),
 			TableId:          uint64(msg.TableID),
 			SenderId:         uint64(msg.TableUserID),
-			SenderUsername:   msg.TableUser.User.Username,
+			SenderUsername:   msg.TableUser.User.Username, // From preload
 			MessageText:      msg.Message,
 			MessageType:      chat.MessageType(msg.MessageType),
 			MessageStatus:    chat.MessageStatus(msg.MessageStatus),
@@ -175,8 +210,9 @@ func (s *ChatService) ListMessages(ctx context.Context, req *chat.ListMessagesRe
 			MediaUrl:         msg.MediaURL,
 			Attachments:      attachments,
 			ReplyToMessageId: msg.ReplyToMessageId,
-			IsDeleted:        !msg.DeletedAt.Time.IsZero(),
+			IsDeleted:        !msg.DeletedAt.Time.IsZero(), // Check if soft-deleted
 		}
+		// Only add UpdatedAt if it's different from CreatedAt
 		if msg.UpdatedAt.After(msg.CreatedAt) {
 			respMsg.UpdatedAt = timestamppb.New(msg.UpdatedAt)
 		}
@@ -184,23 +220,26 @@ func (s *ChatService) ListMessages(ctx context.Context, req *chat.ListMessagesRe
 		respMessages = append(respMessages, respMsg)
 	}
 
+	// --- 7. Determine Next Cursor ---
 	var nextCursor string
+	// If we fetched a full page, the last message ID is the cursor for the next page
 	if len(messages) > 0 && len(messages) == int(pageSize) {
 		nextCursor = messages[len(messages)-1].ID.String()
+		s.Logger.InfoF("Next cursor for pagination: %s", nextCursor)
 	}
 
 	return &chat.ListChatMessageResponse{
 		Messages:   respMessages,
 		NextCursor: &nextCursor,
 	}, nil
-
 }
-func (s *ChatService) UpdateMessage(ctx context.Context, req *chat.UpdateMessageRequest) (*emptypb.Empty, error) {
 
+func (s *ChatService) UpdateMessage(ctx context.Context, req *chat.UpdateMessageRequest) (*emptypb.Empty, error) {
 	s.Logger.InfoF("gRPC ChatService: UpdateMessage initiated for message %s", req.MessageUuid)
 
-	// --- 1. Validação e Autenticação ---
+	// --- 1. Validation and Authentication ---
 	if req.GetMessageUuid() == "" || strings.TrimSpace(req.GetNewMessage()) == "" {
+		s.Logger.ErrorF("Invalid request: message_uuid and new_message_text are required")
 		return nil, status.Errorf(codes.InvalidArgument, "message_uuid and new_message_text are required")
 	}
 
@@ -211,9 +250,10 @@ func (s *ChatService) UpdateMessage(ctx context.Context, req *chat.UpdateMessage
 		return nil, status.Errorf(codes.Internal, "error processing user identity")
 	}
 
-	// --- 2. Encontrar a Mensagem e Autorizar a Ação ---
+	// --- 2. Find Message and Authorize Action ---
+	s.Logger.InfoF("Fetching message %s for update...", req.MessageUuid)
 	var messageToUpdate models.ChatMessage
-	// Usamos Preload para já trazer os dados do autor
+	// Preload TableUser to get the UserID of the author
 	if err := s.Db.Preload("TableUser.User").First(&messageToUpdate, "id = ?", req.GetMessageUuid()).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			s.Logger.ErrorF("Message with ID %s not found", req.MessageUuid)
@@ -223,20 +263,23 @@ func (s *ChatService) UpdateMessage(ctx context.Context, req *chat.UpdateMessage
 		return nil, status.Errorf(codes.Internal, "database error")
 	}
 
-	// Autorização: O user_id do autor da mensagem (TableUser.UserID) deve ser o mesmo do usuário no token.
+	// Authorization: The user_id from the token must match the user_id of the message's author
 	if messageToUpdate.TableUser.UserID != userID {
-		s.Logger.WarningF("Authorization failed: User %d attempted to edit message %s owned by user %d", userID, req.MessageUuid, messageToUpdate.TableUser.UserID)
+		s.Logger.WarningF("Authorization failed: User %d attempted to edit message %s owned by user %d (via TableUser %d)",
+			userID, req.MessageUuid, messageToUpdate.TableUser.UserID, messageToUpdate.TableUser.ID)
 		return nil, status.Errorf(codes.PermissionDenied, "you can only edit your own messages")
 	}
 
-	// Impede a edição de mensagens que não são de texto
+	// Business Logic: Only allow editing of text messages
 	if messageToUpdate.MessageType != consts.MessageType(chat.MessageType_TEXT) {
+		s.Logger.WarningF("User %d attempted to edit non-text message %s (type: %d)", userID, req.MessageUuid, messageToUpdate.MessageType)
 		return nil, status.Errorf(codes.InvalidArgument, "only text messages can be edited")
 	}
 
-	// --- 3. Atualizar, Salvar e Publicar ---
+	// --- 3. Update, Save, and Publish ---
+	s.Logger.InfoF("Authorization successful. Updating message %s...", req.MessageUuid)
 	messageToUpdate.Message = req.GetNewMessage()
-	messageToUpdate.UpdatedAt = time.Now()
+	messageToUpdate.UpdatedAt = time.Now() // GORM will update this automatically, but being explicit is good
 
 	if err := s.Db.Save(&messageToUpdate).Error; err != nil {
 		s.Logger.ErrorF("Database error updating message %s: %v", req.MessageUuid, err)
@@ -245,17 +288,19 @@ func (s *ChatService) UpdateMessage(ctx context.Context, req *chat.UpdateMessage
 
 	s.Logger.InfoF("Message %s updated successfully in database", req.MessageUuid)
 
-	// Publicar o evento no Broker
+	// Publish the event to the Broker
+	s.Logger.InfoF("Publishing ChatMessageUpdated event for table %d", messageToUpdate.TableID)
 
-	// (Reutilizamos a lógica de converter anexos de JSON para []string do ListMessages)
+	// Re-process attachments for the event payload
 	var attachments []string
 	if messageToUpdate.Attachments != nil {
-		err := json.Unmarshal(messageToUpdate.Attachments, &attachments)
-		if err != nil {
-			return nil, err
+		if err := json.Unmarshal(messageToUpdate.Attachments, &attachments); err != nil {
+			s.Logger.ErrorF("Failed to unmarshal attachments for updated message event %s: %v", messageToUpdate.ID, err)
+			// Don't fail the request, just send an empty list
 		}
 	}
 
+	// Build the response payload for the event
 	respProto := &chat.ChatMessageResponse{
 		MessageUuid:      messageToUpdate.ID.String(),
 		TableId:          uint64(messageToUpdate.TableID),
@@ -265,15 +310,16 @@ func (s *ChatService) UpdateMessage(ctx context.Context, req *chat.UpdateMessage
 		MessageType:      chat.MessageType(messageToUpdate.MessageType),
 		MessageStatus:    chat.MessageStatus(messageToUpdate.MessageStatus),
 		SentAt:           timestamppb.New(messageToUpdate.CreatedAt),
-		UpdatedAt:        timestamppb.New(messageToUpdate.UpdatedAt),
+		UpdatedAt:        timestamppb.New(messageToUpdate.UpdatedAt), // The new updated time
 		Attachments:      attachments,
 		MediaUrl:         messageToUpdate.MediaURL,
 		ReplyToMessageId: messageToUpdate.ReplyToMessageId,
 	}
 
+	// Create the sync event
 	syncMsg := &syncBroker.SyncResponse{
 		TableId: respProto.TableId,
-		Action: &syncBroker.SyncResponse_MessageUpdated{ // Usamos o evento ChatMessageUpdated
+		Action: &syncBroker.SyncResponse_MessageUpdated{ // Use the ChatMessageUpdated event
 			MessageUpdated: &chat.ChatMessageUpdated{
 				Message: respProto,
 			},
@@ -285,11 +331,13 @@ func (s *ChatService) UpdateMessage(ctx context.Context, req *chat.UpdateMessage
 
 	return &emptypb.Empty{}, nil
 }
+
 func (s *ChatService) DeleteMessage(ctx context.Context, req *chat.DeleteMessageRequest) (*emptypb.Empty, error) {
 	s.Logger.InfoF("gRPC ChatService: DeleteMessage initiated for message %s", req.MessageUuid)
 
-	// --- 1. Validação e Autenticação ---
+	// --- 1. Validation and Authentication ---
 	if req.GetMessageUuid() == "" {
+		s.Logger.ErrorF("Invalid request: message_uuid is required")
 		return nil, status.Errorf(codes.InvalidArgument, "message_uuid is required")
 	}
 
@@ -300,74 +348,74 @@ func (s *ChatService) DeleteMessage(ctx context.Context, req *chat.DeleteMessage
 		return nil, status.Errorf(codes.Internal, "error processing user identity")
 	}
 
-	// --- 2. Encontrar a Mensagem e Autorizar a Ação ---
+	// --- 2. Find Message and Authorize Action ---
+	s.Logger.InfoF("Fetching message %s for deletion...", req.MessageUuid)
 	var messageToDelete models.ChatMessage
 	if err := s.Db.Preload("TableUser").First(&messageToDelete, "id = ?", req.GetMessageUuid()).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			s.Logger.ErrorF("Message with ID %s not found for deletion", req.MessageUuid)
-			// Retornamos sucesso mesmo se a mensagem não existir para evitar que um cliente saiba se uma mensagem existiu ou não.
+			s.Logger.WarningF("Message with ID %s not found for deletion (idempotent success)", req.MessageUuid)
+			// Return success (idempotency) if message is already gone
 			return &emptypb.Empty{}, nil
 		}
 		s.Logger.ErrorF("Database error finding message for deletion: %v", err)
 		return nil, status.Errorf(codes.Internal, "database error")
 	}
 
-	// Autorização: Apenas o autor original pode deletar a mensagem.
-	// (Futuramente, você pode adicionar uma lógica para permitir que o "Mestre" da mesa também delete)
+	// Authorization: Only the original author can delete.
 	if messageToDelete.TableUser.UserID != userID {
-		s.Logger.WarningF("Authorization failed: User %d attempted to delete message %s owned by user %d", userID, req.MessageUuid, messageToDelete.TableUser.UserID)
+		s.Logger.WarningF("Authorization failed: User %d attempted to delete message %s owned by user %d (via TableUser %d)",
+			userID, req.MessageUuid, messageToDelete.TableUser.UserID, messageToDelete.TableUser.ID)
 		return nil, status.Errorf(codes.PermissionDenied, "you can only delete your own messages")
 	}
 
-	// --- 3. Deletar (Soft Delete), Salvar e Publicar ---
-	if err := s.Db.Delete(&messageToDelete).Error; err != nil {
+	// --- 3. Delete (Soft Delete), Save, and Publish ---
+	s.Logger.InfoF("Authorization successful. Soft-deleting message %s...", req.MessageUuid)
+	if err := s.Db.Delete(&messageToDelete).Error; err != nil { // GORM performs a soft delete
 		s.Logger.ErrorF("Database error deleting message %s: %v", req.MessageUuid, err)
 		return nil, status.Errorf(codes.Internal, "could not delete message")
 	}
 
 	s.Logger.InfoF("Message %s soft-deleted successfully from database", req.MessageUuid)
 
-	// Publicar o evento no Broker para que a UI de todos os clientes possa atualizar
+	// Publish the delete event to the Broker
 	syncMsg := &syncBroker.SyncResponse{
-		TableId: uint64(messageToDelete.TableUser.TableID),
-		Action: &syncBroker.SyncResponse_MessageDeleted{ // Usamos o evento ChatMessageDeleted
+		TableId: uint64(messageToDelete.TableID), // Use TableID from the message
+		Action: &syncBroker.SyncResponse_MessageDeleted{ // Use the ChatMessageDeleted event
 			MessageDeleted: &chat.ChatMessageDeleted{
 				MessageUuid: req.GetMessageUuid(),
-				TableId:     uint64(messageToDelete.TableUser.TableID),
+				TableId:     uint64(messageToDelete.TableID),
 			},
 		},
 	}
 
-	s.Broker.Publish(pubSubSyncConst.TableSync, uint64(messageToDelete.TableUser.TableID), syncMsg)
-	s.Logger.InfoF("Published ChatMessageDeleted event to broker for table %d", messageToDelete.TableUser.TableID)
+	s.Broker.Publish(pubSubSyncConst.TableSync, uint64(messageToDelete.TableID), syncMsg)
+	s.Logger.InfoF("Published ChatMessageDeleted event to broker for table %d", messageToDelete.TableID)
 
 	return &emptypb.Empty{}, nil
 }
+
 func (s *ChatService) SendPrivateMessage(ctx context.Context, req *chat.SendPrivateMessageRequest) (*emptypb.Empty, error) {
 	s.Logger.InfoF("gRPC ChatService: SendPrivateMessage initiated")
 
-	// --- 1. Validação e Autenticação ---
+	// --- 1. Validation and Authentication ---
 	if req.GetToTableUserId() == 0 {
-		return nil, status.Errorf(codes.InvalidArgument, "recipient user ID (to_table_user_id) is required")
+		s.Logger.ErrorF("Invalid request: recipient tableUser ID (to_table_user_id) is required")
+		return nil, status.Errorf(codes.InvalidArgument, "recipient tableUser ID (to_table_user_id) is required")
 	}
 
 	userIDFromCtx := ctx.Value("user_id")
-	senderUserID, ok := userIDFromCtx.(uint)
+	senderUserID, ok := userIDFromCtx.(uint) // This is the models.User ID
 	if !ok {
 		s.Logger.ErrorF("Sender UserID not found in context")
 		return nil, status.Errorf(codes.Internal, "error processing sender identity")
 	}
 
-	// --- 2. Encontrar Remetente e Destinatário ---
-	// NOTA: Esta busca assume que um usuário só pode estar em uma mesa por vez,
-	// ou que o contexto gRPC já foi filtrado para uma mesa específica.
-	// Uma solução mais robusta seria passar o table_id na requisição.
-	var senderTableUser models.TableUser
-	if err := s.Db.Preload("User").First(&senderTableUser, "user_id = ?", senderUserID).Error; err != nil {
-		s.Logger.ErrorF("Could not find sender's table profile: %v", err)
-		return nil, status.Errorf(codes.FailedPrecondition, "sender profile not found")
-	}
+	// --- 2. Find Sender and Recipient TableUser profiles ---
+	// NOTE: This logic assumes a user might be in multiple tables, so we must
+	// find the *correct* sender TableUser profile. A simple First() is not enough.
+	// A robust solution would require the TableID in the request.
 
+	s.Logger.InfoF("Fetching recipient TableUser profile for ID %d", req.GetToTableUserId())
 	var recipientTableUser models.TableUser
 	if err := s.Db.Preload("User").First(&recipientTableUser, "id = ?", req.GetToTableUserId()).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -378,18 +426,29 @@ func (s *ChatService) SendPrivateMessage(ctx context.Context, req *chat.SendPriv
 		return nil, status.Errorf(codes.Internal, "database error")
 	}
 
+	// Now find the sender's TableUser profile *for the same table*
+	s.Logger.InfoF("Fetching sender TableUser profile for user %d in table %d", senderUserID, recipientTableUser.TableID)
+	var senderTableUser models.TableUser
+	if err := s.Db.Preload("User").First(&senderTableUser, "user_id = ? AND table_id = ?", senderUserID, recipientTableUser.TableID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			s.Logger.WarningF("Authorization failed: Sender %d is not in the same table as recipient %d (Table %d)",
+				senderUserID, recipientTableUser.ID, recipientTableUser.TableID)
+			return nil, status.Errorf(codes.PermissionDenied, "sender and recipient are not in the same table")
+		}
+		s.Logger.ErrorF("Could not find sender's table profile: %v", err)
+		return nil, status.Errorf(codes.FailedPrecondition, "sender profile not found in recipient's table")
+	}
+
+	// Check for self-message
 	if senderTableUser.ID == recipientTableUser.ID {
+		s.Logger.WarningF("User %d (TableUser %d) attempted to send PM to themselves", senderUserID, senderTableUser.ID)
 		return nil, status.Errorf(codes.InvalidArgument, "cannot send a private message to yourself")
 	}
 
-	// --- 3. Autorização Crucial ---
-	if senderTableUser.TableID != recipientTableUser.TableID {
-		s.Logger.WarningF("Authorization failed: User %d (table %d) attempted to send PM to user %d (table %d)",
-			senderUserID, senderTableUser.TableID, recipientTableUser.UserID, recipientTableUser.TableID)
-		return nil, status.Errorf(codes.PermissionDenied, "sender and recipient are not in the same table")
-	}
+	// --- 3. (Authorization was handled in step 2) ---
 
-	// --- 4. Montar e Salvar a Mensagem ---
+	// --- 4. Assemble and Save Message ---
+	s.Logger.InfoF("All checks passed. Assembling private message...")
 	var attachmentsJSON datatypes.JSON
 	if len(req.GetAttachments()) > 0 {
 		jsonBytes, err := json.Marshal(req.GetAttachments())
@@ -400,10 +459,11 @@ func (s *ChatService) SendPrivateMessage(ctx context.Context, req *chat.SendPriv
 		attachmentsJSON = jsonBytes
 	}
 
-	recipientTableUserID := recipientTableUser.ID // Para usar no ponteiro
+	recipientTableUserID := recipientTableUser.ID // Get ID to use as a pointer
 	privateMessageModel := models.ChatMessage{
-		TableUserID:   senderTableUser.ID,    // O autor
-		ToTableUserId: &recipientTableUserID, // O destinatário
+		TableID:       senderTableUser.TableID, // Set the TableID for partitioning
+		TableUserID:   senderTableUser.ID,      // The author
+		ToTableUserId: &recipientTableUserID,   // The recipient (pointer)
 		Message:       req.GetMessage(),
 		MessageType:   consts.MessageType(req.GetMessageType()),
 		MessageStatus: consts.MessageStatus(chat.MessageStatus_SENT),
@@ -411,7 +471,7 @@ func (s *ChatService) SendPrivateMessage(ctx context.Context, req *chat.SendPriv
 		CreatedAt:     time.Now(),
 		UpdatedAt:     time.Now(),
 	}
-	// Adiciona campos opcionais
+	// Add optional fields
 	if req.MediaUrl != nil {
 		privateMessageModel.MediaURL = req.MediaUrl
 	}
@@ -419,16 +479,18 @@ func (s *ChatService) SendPrivateMessage(ctx context.Context, req *chat.SendPriv
 		privateMessageModel.ReplyToMessageId = req.ReplyToMessageId
 	}
 
+	s.Logger.InfoF("Saving private message from TableUser %d to %d in table %d...",
+		senderTableUser.ID, recipientTableUser.ID, senderTableUser.TableID)
 	if err := s.Db.Create(&privateMessageModel).Error; err != nil {
 		s.Logger.ErrorF("Database error creating private message: %v", err)
 		return nil, status.Errorf(codes.Internal, "could not save private message")
 	}
-	s.Logger.InfoF("Private message %s from %d to %d saved to database", privateMessageModel.ID, senderTableUser.ID, recipientTableUser.ID)
+	s.Logger.InfoF("Private message %s saved to database", privateMessageModel.ID)
 
-	// --- 5. Publicar no Broker ---
-
+	// --- 5. Publish to Broker ---
 	recipientID := uint64(recipientTableUser.ID)
 
+	// Build the event payload
 	respProto := &chat.ChatMessageResponse{
 		MessageUuid:        privateMessageModel.ID.String(),
 		TableId:            uint64(senderTableUser.TableID),
@@ -441,7 +503,7 @@ func (s *ChatService) SendPrivateMessage(ctx context.Context, req *chat.SendPriv
 		MediaUrl:           req.MediaUrl,
 		Attachments:        req.Attachments,
 		ReplyToMessageId:   req.ReplyToMessageId,
-		PrivateRecipientId: &recipientID,
+		PrivateRecipientId: &recipientID, // Mark this as a PM
 	}
 
 	syncMsg := &syncBroker.SyncResponse{
@@ -453,294 +515,10 @@ func (s *ChatService) SendPrivateMessage(ctx context.Context, req *chat.SendPriv
 		},
 	}
 
+	// Publish to the main table sync
+	// The clients will be responsible for filtering messages
 	s.Broker.Publish(pubSubSyncConst.TableSync, respProto.TableId, syncMsg)
 	s.Logger.InfoF("Published private ChatMessageSent event to broker for table %d", respProto.TableId)
 
 	return &emptypb.Empty{}, nil
 }
-
-//// SendMessage sends a Message at table using pub/sub
-//func (s *ChatService) SendMessage(stream grpc.BidiStreamingServer[chat.ChatMessageRequest, chat.ChatMessageResponse]) error {
-//
-//	req, err := stream.Recv()
-//	if err == io.EOF {
-//		return nil
-//	}
-//	if err != nil {
-//		return status.Errorf(codes.Internal, "initial recv error: %v", err)
-//	}
-//
-//	if err := Validate(req); err != nil {
-//		return status.Errorf(codes.InvalidArgument, err.Error())
-//	}
-//
-//	var tableUser models.TableUser
-//
-//	if err := s.Db.Preload("User").Where("id = ?", req.GetTableUserId()).First(&tableUser).Error; err != nil {
-//		return status.Errorf(codes.NotFound, "table user not found: %v", err)
-//	}
-//	tableID := tableUser.TableID
-//
-//	subID := s.publicChatSubscribe(tableID, stream)
-//	defer s.publicChatUnsubscribe(tableID, subID)
-//
-//	// Enters the loop after checking the connected users
-//	for {
-//		sendedMessage := time.Now()
-//
-//		// Prepara ponteiros opcionais
-//		var attachmentsPtr, mediaURLPtr, replyToPtr *string
-//		if req.Attachments != "" {
-//			attachmentsPtr = &req.Attachments
-//		}
-//		if req.MediaUrl != "" {
-//			mediaURLPtr = &req.MediaUrl
-//		}
-//		if req.ReplyToMessageId != "" {
-//			replyToPtr = &req.ReplyToMessageId
-//		}
-//
-//		//Send Audio
-//		if req.MessageType == chat.MessageType_AUDIO {
-//			//Cannot send audio and text at the same time
-//			if req.Message != "" {
-//				return status.Errorf(codes.InvalidArgument, "cannot send audio and message at the same time")
-//			}
-//			//pick audio URL
-//			mediaURLPtr = &req.MediaUrl
-//
-//		}
-//
-//		// assemble and save the message
-//		chatMessage := models.ChatMessage{
-//			TableUserID:      tableUser.ID,
-//			Message:          req.Message,
-//			Username:         tableUser.User.Username,
-//			MessageStatus:    consts.MessageStatus(chat.MessageStatus_SENT),
-//			MessageType:      consts.MessageType(req.MessageType),
-//			Attachments:      attachmentsPtr,
-//			MediaURL:         mediaURLPtr,
-//			ReplyToMessageId: replyToPtr,
-//			CreatedAt:        sendedMessage,
-//			UpdatedAt:        sendedMessage,
-//		}
-//
-//		if err := s.Db.Create(&chatMessage).Error; err != nil {
-//			return status.Errorf(codes.Internal, "error creating message: %v", err)
-//		}
-//
-//		s.Logger.InfoF("Message sent: %v", chatMessage)
-//
-//		// creating response
-//		resp := &chat.ChatMessageResponse{
-//			Message:          chatMessage.Message,
-//			Username:         chatMessage.Username,
-//			MediaUrl:         req.MediaUrl,
-//			Attachments:      req.Attachments,
-//			MessageType:      req.MessageType,
-//			MessageStatus:    chat.MessageStatus_SENT,
-//			SendAt:           timestamppb.New(sendedMessage),
-//			MessageId:        chatMessage.ID.String(),
-//			IsDeleted:        false,
-//			ReplyToMessageId: req.ReplyToMessageId,
-//		}
-//
-//		// send the message to all users on the table
-//		s.mu.RLock()
-//		for id, sub := range s.publicSubscribers[tableID] {
-//			if err := sub.Send(resp); err != nil {
-//				s.Logger.ErrorF("error sending to subscriber %s: %v", id, err)
-//				s.publicChatUnsubscribe(tableID, id)
-//			}
-//		}
-//		s.mu.RUnlock()
-//		s.Logger.InfoF("broadcast update for table_user: %v", tableID)
-//
-//		// wait next message
-//		req, err = stream.Recv()
-//		if err == io.EOF {
-//			return nil
-//		}
-//		if err != nil {
-//			return status.Errorf(codes.Internal, "recv error: %v", err)
-//		}
-//		if err := Validate(req); err != nil {
-//			return status.Errorf(codes.InvalidArgument, err.Error())
-//		}
-//	}
-//}
-//
-//func (s *ChatService) ListMessages(req *chat.ListMessagesRequest, stream grpc.ServerStreamingServer[chat.ChatMessageResponse]) error {
-//	var tableUser models.TableUser
-//
-//	// Fetches the TableUser and gets the associated table_id
-//	if err := s.Db.Where("id = ?", req.GetTableId()).First(&tableUser).Error; err != nil {
-//		return status.Errorf(codes.NotFound, "TableUser not found: %v", err)
-//	}
-//
-//	var allTableUsers []models.TableUser
-//	if err := s.Db.Where("table_id = ?", tableUser.TableID).Find(&allTableUsers).Error; err != nil {
-//		return status.Errorf(codes.Internal, "error finding table users: %v", err)
-//	}
-//
-//	if len(allTableUsers) == 0 {
-//		return status.Errorf(codes.NotFound, "no users found in this table")
-//	}
-//
-//	// Extracts all user IDs participating in the table
-//	var tableUserIDs []uint
-//	for _, tu := range allTableUsers {
-//		tableUserIDs = append(tableUserIDs, tu.ID)
-//	}
-//
-//	// Search all messages from these users
-//	var listMessages []models.ChatMessage
-//	if err := s.Db.
-//		Where("table_user_id IN ?", tableUserIDs).
-//		Order("created_at asc").
-//		Find(&listMessages).Error; err != nil {
-//		return status.Errorf(codes.Internal, "error finding messages: %v", err)
-//	}
-//
-//	if len(listMessages) == 0 {
-//		return status.Errorf(codes.NotFound, "no messages were found in this table")
-//	}
-//
-//	for _, msg := range listMessages {
-//		resp := &chat.ChatMessageResponse{
-//			Message:       msg.Message,
-//			Username:      msg.Username,
-//			MessageType:   chat.MessageType(msg.MessageType),
-//			MessageStatus: chat.MessageStatus(msg.MessageStatus),
-//			SendAt:        timestamppb.New(msg.CreatedAt),
-//			MessageId:     msg.ID.String(),
-//			IsDeleted:     false,
-//		}
-//
-//		if msg.MediaURL != nil {
-//			resp.MediaUrl = *msg.MediaURL
-//		}
-//		if msg.Attachments != nil {
-//			resp.Attachments = *msg.Attachments
-//		}
-//		if msg.ReplyToMessageId != nil {
-//			resp.ReplyToMessageId = *msg.ReplyToMessageId
-//		}
-//
-//		if err := stream.Send(resp); err != nil {
-//			return status.Errorf(codes.Internal, "error sending message: %v", err)
-//		}
-//	}
-//
-//	return nil
-//}
-//
-//func (s *ChatService) SendPrivateMessage(stream grpc.BidiStreamingServer[chat.ChatMessagePrivateRequest, chat.ChatMessageResponse]) error {
-//
-//	req, err := stream.Recv()
-//
-//	if err == io.EOF {
-//		return nil
-//	}
-//	if err != nil {
-//		return status.Errorf(codes.Internal, "initial recv error: %v", err)
-//	}
-//
-//	if req.TableUserId <= 0 || req.ToTableUserId <= 0 {
-//		return status.Errorf(codes.InvalidArgument, "destin or origin endress is invalid:")
-//	}
-//
-//	if req.TableUserId == req.ToTableUserId {
-//		return status.Errorf(codes.InvalidArgument, "cannot send private message to yourself")
-//	}
-//
-//	var fromUser models.TableUser
-//	var toUser models.TableUser
-//
-//	if err := s.Db.Preload("User").Where("id = ?", req.GetTableUserId()).First(&fromUser).Error; err != nil {
-//		return status.Errorf(codes.NotFound, "table user not found: %v", err)
-//	}
-//
-//	if err := s.Db.Preload("User").Where("id = ?", req.GetToTableUserId()).First(&toUser).Error; err != nil {
-//		return status.Errorf(codes.NotFound, "table user not found: %v", err)
-//	}
-//
-//	if fromUser.TableID != toUser.TableID {
-//		return status.Errorf(codes.FailedPrecondition, "users are not on the same table")
-//	}
-//
-//	subID := s.privateChatSubscribe(fromUser.ID, toUser.ID, stream)
-//	defer s.privateChatUnsubscribe(fromUser.ID, toUser.ID, subID)
-//
-//	for {
-//		sendedMessage := time.Now()
-//
-//		req, err = stream.Recv()
-//		if err == io.EOF {
-//			return nil
-//		}
-//		if err != nil {
-//			return status.Errorf(codes.Internal, "recv error: %v", err)
-//		}
-//
-//		var attachmentsPtr, mediaURLPtr, replyToPtr *string
-//		if req.Attachments != "" {
-//			attachmentsPtr = &req.Attachments
-//		}
-//		if req.MediaUrl != "" {
-//			mediaURLPtr = &req.MediaUrl
-//		}
-//		if req.ReplyToMessageId != "" {
-//			replyToPtr = &req.ReplyToMessageId
-//		}
-//
-//		chatMessage := &models.ChatMessage{
-//			TableUserID:      fromUser.ID,
-//			ToTableUserId:    &toUser.ID,
-//			Username:         fromUser.User.Username,
-//			Message:          req.GetMessage(),
-//			Attachments:      attachmentsPtr,
-//			MediaURL:         mediaURLPtr,
-//			ReplyToMessageId: replyToPtr,
-//			MessageType:      consts.MessageType(req.MessageType),
-//			MessageStatus:    consts.MessageStatus(req.MessageStatus),
-//			CreatedAt:        sendedMessage,
-//			UpdatedAt:        sendedMessage,
-//		}
-//
-//		if err := s.Db.Create(&chatMessage).Error; err != nil {
-//			return status.Errorf(codes.Internal, "error creating message: %v", err)
-//		}
-//		s.Logger.InfoF("Message sent: %v", chatMessage)
-//
-//		// creating response
-//		resp := &chat.ChatMessageResponse{
-//			Message:          chatMessage.Message,
-//			Username:         chatMessage.Username,
-//			MediaUrl:         req.MediaUrl,
-//			Attachments:      req.Attachments,
-//			MessageType:      req.MessageType,
-//			MessageStatus:    chat.MessageStatus_SENT,
-//			SendAt:           timestamppb.New(sendedMessage),
-//			MessageId:        chatMessage.ID.String(),
-//			IsDeleted:        false,
-//			ReplyToMessageId: req.ReplyToMessageId,
-//		}
-//
-//		// send the message to all users on the table
-//		s.mu.RLock()
-//		if subsMap, ok := s.privateSubscribers[toUser.ID]; ok {
-//			if subs, ok := subsMap[fromUser.ID]; ok {
-//				for id, sub := range subs {
-//					if err := sub.Send(resp); err != nil {
-//						s.Logger.ErrorF("error sending to subscriber %s: %v", id, err)
-//						s.privateChatUnsubscribe(toUser.ID, fromUser.ID, id)
-//					}
-//				}
-//			}
-//		}
-//		s.mu.RUnlock()
-//		s.Logger.InfoF("broadcast update for table_user: %v", toUser.UserID)
-//
-//	}
-//}
