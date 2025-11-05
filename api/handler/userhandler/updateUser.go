@@ -12,7 +12,7 @@ import (
 // @BasePath /api/v1
 
 // UpdateUserHandler
-// @Summary Update user
+// @Summary Update tableUser
 // @Schemes
 // @Description Update User by ID via query parameter
 // @Tags User
@@ -22,7 +22,7 @@ import (
 // @Success 200 {object} userDTO.UserResponse "User Created sucessfully"
 // @Failure 400 {object} userDTO.ErrorResponse "Bad request error"
 // @Failure 500 {object} userDTO.ErrorResponse "Internal Server Error"
-// @Router /user/me [put]
+// @Router /tableUser/me [put]
 func UpdateUserHandler(ctx *gin.Context) {
 	request := userDTO.UpdateUserRequest{}
 
@@ -41,7 +41,7 @@ func UpdateUserHandler(ctx *gin.Context) {
 	//idParam := ctx.Query("id")
 	//id, err := strconv.ParseUint(idParam, 10, 64)
 	//if err != nil {
-	//	handler.SendError(ctx, http.StatusBadRequest, "invalid user ID")
+	//	handler.SendError(ctx, http.StatusBadRequest, "invalid tableUser ID")
 	//	return
 	//}
 
@@ -53,11 +53,11 @@ func UpdateUserHandler(ctx *gin.Context) {
 
 	user, err := userService.UpdateUser(handler.GetHandlerDB(), userID, request)
 	if err != nil {
-		handler.GetHandlerLogger().ErrorF("Error updating user: %v", err.Error())
+		handler.GetHandlerLogger().ErrorF("Error updating tableUser: %v", err.Error())
 		handler.SendError(ctx, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	handler.SendSucess(ctx, "Update-user", user)
+	handler.SendSucess(ctx, "Update-tableUser", user)
 
 }

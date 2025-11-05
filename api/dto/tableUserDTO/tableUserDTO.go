@@ -15,11 +15,11 @@ type TableUserResponse struct {
 	ID      uint `json:"id"`
 	TableID uint `json:"table_id"`
 	UserID  uint `json:"user_id"`
-	//Role represents a function that user will be in the table
+	//Role represents a function that tableUser will be in the table
 	//Enum: 1,2
 	// 1 to Player, 2 to GameMaster
 	Role       consts.Role    `json:"role" binding:"required"`
-	User       interface{}    `json:"user"`
+	User       interface{}    `json:"tableUser"`
 	Table      interface{}    `json:"table"`
 	Deleted_At gorm.DeletedAt `json:"deleted_at" gorm:"index"`
 }

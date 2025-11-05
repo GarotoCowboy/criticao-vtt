@@ -5,71 +5,26 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/GarotoCowboy/vttProject/api/grpc/proto/character/pb"
+	"io"
+
+	"github.com/GarotoCowboy/vttProject/api/grpc/pb/character"
 	"github.com/GarotoCowboy/vttProject/api/models"
 	"github.com/GarotoCowboy/vttProject/api/models/consts"
 	"github.com/GarotoCowboy/vttProject/api/service/rules/tormenta20Rules"
-	"github.com/GarotoCowboy/vttProject/config"
-	"github.com/google/uuid"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"gorm.io/gorm"
-	"io"
-	"sync"
 )
 
-type CharacterService struct {
-	pb.UnimplementedCharacterServiceServer
-	Db     *gorm.DB
-	Logger *config.Logger
-	mu     sync.RWMutex
-	rules  *tormenta20Rules.RulesService
-	subscribers map[uint]map[string] pb.CharacterService_UpdateSheetServer
-}
-
-// function that initialize the CharacterService struct
-func NewCharacterService(db *gorm.DB, logger *config.Logger) *CharacterService {
-	return &CharacterService{
-		Db:     db,
-		Logger: logger,
-		rules:  tormenta20Rules.NewRulesService(),
-		subscribers: make(map[uint]map[string]pb.CharacterService_UpdateSheetServer),
-	}
-}
-
-func (c *CharacterService) subscribe(id uint, stream pb.CharacterService_UpdateSheetServer) string {
-	subID := uuid.NewString()
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	if c.subscribers[id] == nil {
-		c.subscribers[id] = make(map[string]pb.CharacterService_UpdateSheetServer)
-	}
-	c.subscribers[id][subID] = stream
-	return subID
-}
-
-func (c *CharacterService) unsubscribe(id uint, subID string){
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	if subs,ok := c.subscribers[id]; ok{
-		delete(subs,subID)
-		if len(subs) == 0 {
-			delete(c.subscribers, id)
-		}
-	}
-}
-
 // this grpc function creates an character
-func (c *CharacterService) CreateCharacter(ctx context.Context, req *pb.CreateCharacterRequest) (*pb.CreateCharacterResponse, error) {
+func (c *CharacterService) CreateCharacter(ctx context.Context, req *character.CreateCharacterRequest) (*character.CreateCharacterResponse, error) {
 
-	//Validate the fields of character
+	//Validate the fields of characterModel
 	if err := Validate(req); err != nil {
-		return nil, status.Errorf(codes.InvalidArgument,"invalid Request Body: %v", err.Error())
+		return nil, status.Errorf(codes.InvalidArgument, "invalid Request Body: %v", err.Error())
 	}
 
 	//I need change this, it's temporary, but i use to filter the sheet based on the system
@@ -88,30 +43,30 @@ func (c *CharacterService) CreateCharacter(ctx context.Context, req *pb.CreateCh
 	//Marshalling the sheet to byte to convert to jsonB on postgres
 	sheetBytes, err := json.Marshal(t20Sheet)
 	if err != nil {
-		return &pb.CreateCharacterResponse{}, fmt.Errorf("error marshalling sheet data: %w", err)
+		return &character.CreateCharacterResponse{}, fmt.Errorf("error marshalling sheet data: %w", err)
 	}
 
 	tableUser := models.TableUser{}
 
 	if err := c.Db.Where("id = ?", req.TableUserId).First(&tableUser).Error; err != nil {
-		return &pb.CreateCharacterResponse{}, status.Error(codes.NotFound, "Table user not found")
+		return &character.CreateCharacterResponse{}, status.Error(codes.NotFound, "Table tableUser not found")
 	}
 
-	var character = models.Character{
+	var characterModel = models.Character{
 		Name:        req.CharacterName,
 		PlayerName:  tableUser.User.Username,
 		SystemKey:   consts.SystemKey(req.SystemKey),
 		TableUserID: uint(req.TableUserId),
 		SheetData:   sheetBytes,
 	}
-	//create character
-	if err := c.Db.Create(&character).Error; err != nil {
-		return nil, status.Errorf(codes.Internal, "error creating character: %w", err)
+	//create characterModel
+	if err := c.Db.Create(&characterModel).Error; err != nil {
+		return nil, status.Errorf(codes.Internal, "error creating characterModel: %w", err)
 	}
 
-	c.Logger.InfoF("Character created: %v", character)
+	c.Logger.InfoF("Character created: %v", characterModel)
 
-	return &pb.CreateCharacterResponse{
+	return &character.CreateCharacterResponse{
 		CharacterName: req.CharacterName,
 		//Corrigir Depois o codigo abaixo
 		//SheetData:   (sheetBytes),
@@ -121,13 +76,7 @@ func (c *CharacterService) CreateCharacter(ctx context.Context, req *pb.CreateCh
 
 }
 
-// :todo CORRIGIR ESSE CODIGO DPS, SE POSSIVEL REFAZER ELE!!
-func (c *CharacterService) SubscribeSheet(stream grpc.BidiStreamingServer[pb.SheetUpdate, pb.SheetUpdate]) error {
-
-	return nil
-}
-
-func (c *CharacterService) UpdateSheet(stream pb.CharacterService_UpdateSheetServer) error {
+func (c *CharacterService) UpdateSheet(stream character.CharacterService_UpdateSheetServer) error {
 	ctx := stream.Context()
 	var subID string
 	var charID uint
@@ -148,14 +97,14 @@ func (c *CharacterService) UpdateSheet(stream pb.CharacterService_UpdateSheetSer
 			return status.Errorf(codes.Internal, "recv error: %v", err)
 		}
 
-		if subID == ""{
+		if subID == "" {
 			charID = uint(req.GetCharacterId())
 			subID = c.subscribe(charID, stream)
 			defer c.unsubscribe(charID, subID)
 		}
 
 		//search for a character from the database
-		charReq := &pb.GetCharacterRequest{
+		charReq := &character.GetCharacterRequest{
 			CharacterId: uint32(charID),
 			TableId:     req.GetTableId(),
 		}
@@ -214,14 +163,12 @@ func (c *CharacterService) UpdateSheet(stream pb.CharacterService_UpdateSheetSer
 
 		//applies business rules to calculate character sheet bonuses automatically
 
-
-
 		bonusSheet, err := c.rules.CalculateSheetSkillsAutomatically(charResp.Sheet)
 		if err != nil {
 			return status.Errorf(codes.Internal, "could not calculate skill automatically: %v", err)
 		}
 
-		bonusSheet,err = c.rules.CalculateSheetDefenseAutomatically(charResp.Sheet)
+		bonusSheet, err = c.rules.CalculateSheetDefenseAutomatically(charResp.Sheet)
 		if err != nil {
 			return status.Errorf(codes.Internal, "could not calculate armor bonus automatically: %v", err)
 		}
@@ -244,7 +191,7 @@ func (c *CharacterService) UpdateSheet(stream pb.CharacterService_UpdateSheetSer
 			return status.Errorf(codes.Internal, "error updating character: %v", err)
 		}
 
-		resp := &pb.CharacterUpdateResponse{
+		resp := &character.CharacterUpdateResponse{
 			CharacterName: charResp.Name,
 			Sheet:         bonusSheet,
 			LastModfield:  timestamppb.Now(),
@@ -268,39 +215,39 @@ func (c *CharacterService) UpdateSheet(stream pb.CharacterService_UpdateSheetSer
 }
 
 // Search a sheet
-func (c *CharacterService) GetCharacter(ctx context.Context, req *pb.GetCharacterRequest) (*pb.GetCharacterResponse, error) {
+func (c *CharacterService) GetCharacter(ctx context.Context, req *character.GetCharacterRequest) (*character.GetCharacterResponse, error) {
 	if req.CharacterId <= 0 || req.TableId <= 0 {
-		return &pb.GetCharacterResponse{}, status.Errorf(codes.InvalidArgument, "character_Id or table_Id is invalid")
+		return &character.GetCharacterResponse{}, status.Errorf(codes.InvalidArgument, "character_Id or table_Id is invalid")
 	}
 	var characterId = req.CharacterId
-	var character models.Character
-	var sheet pb.Sheet
+	var characterModel models.Character
+	var sheet character.Sheet
 
-	if err := c.Db.Where("id=? AND table_user_id = ? AND deleted_at IS NULL", characterId, req.TableId).First(&character).Error; err != nil {
+	if err := c.Db.Where("id=? AND table_user_id = ? AND deleted_at IS NULL", characterId, req.TableId).First(&characterModel).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return &pb.GetCharacterResponse{}, status.Errorf(codes.NotFound, "character not found in this table", err)
+			return &character.GetCharacterResponse{}, status.Errorf(codes.NotFound, "characterModel not found in this table", err)
 		}
-		return &pb.GetCharacterResponse{}, err
+		return &character.GetCharacterResponse{}, err
 	}
-	if err := json.Unmarshal(character.SheetData, &sheet); err != nil {
-		return &pb.GetCharacterResponse{}, status.Errorf(codes.Internal, "error unmarshalling sheet data: %v", err)
+	if err := json.Unmarshal(characterModel.SheetData, &sheet); err != nil {
+		return &character.GetCharacterResponse{}, status.Errorf(codes.Internal, "error unmarshalling sheet data: %v", err)
 	}
 
-	return &pb.GetCharacterResponse{
+	return &character.GetCharacterResponse{
 		Sheet: &sheet,
-		Name:  character.Name,
+		Name:  characterModel.Name,
 	}, nil
 
 }
 
 // ListCharacter is a function that client make an requisiton and the stream server provides a list of Characters
 // on a determinate table
-func (c *CharacterService) ListCharacter(req *pb.ListCharacterRequest, stream grpc.ServerStreamingServer[pb.GetCharacterResponse]) error {
+func (c *CharacterService) ListCharacter(req *character.ListCharacterRequest, stream grpc.ServerStreamingServer[character.GetCharacterResponse]) error {
 	if req.TableId <= 0 {
 		return status.Errorf(codes.InvalidArgument, "table_Id is invalid")
 	}
 
-	var sheet pb.Sheet
+	var sheet character.Sheet
 	var tableID = req.TableId
 	var listCharacter []models.Character
 
@@ -314,12 +261,12 @@ func (c *CharacterService) ListCharacter(req *pb.ListCharacterRequest, stream gr
 		return status.Errorf(codes.NotFound, "character not found in this table")
 	}
 
-	for _, character := range listCharacter {
-		if err := json.Unmarshal(character.SheetData, &sheet); err != nil {
+	for _, characterFor := range listCharacter {
+		if err := json.Unmarshal(characterFor.SheetData, &sheet); err != nil {
 			return status.Errorf(codes.Internal, "error unmarshalling sheet data: %v", err)
 		}
-		characterResponse := &pb.GetCharacterResponse{
-			Name:  character.Name,
+		characterResponse := &character.GetCharacterResponse{
+			Name:  characterFor.Name,
 			Sheet: &sheet,
 		}
 
@@ -332,44 +279,42 @@ func (c *CharacterService) ListCharacter(req *pb.ListCharacterRequest, stream gr
 	return nil
 }
 
-func (c *CharacterService) 	DeleteSheet(ctx context.Context, req *pb.GetCharacterRequest) (*pb.DeleteCharacterResponse, error){
+func (c *CharacterService) DeleteSheet(ctx context.Context, req *character.GetCharacterRequest) (*character.DeleteCharacterResponse, error) {
 
 	//Verify if the Ids are valid
 	if req.TableId <= 0 || req.CharacterId <= 0 {
-		return &pb.DeleteCharacterResponse{
+		return &character.DeleteCharacterResponse{
 			MessageStatus: "400",
 			Message:       "character and table id is invalid",
 		}, status.Errorf(codes.NotFound, "character and table id is invalid")
 	}
 
-	var character = models.Character{}
+	var characterModel = models.Character{}
 
 	//Search first character with inputted id
-	if err := c.Db.Where("id = ? AND table_user_id = ?", req.CharacterId,req.TableId).
-		First(&character).
+	if err := c.Db.Where("id = ? AND table_user_id = ?", req.CharacterId, req.TableId).
+		First(&characterModel).
 		Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return &pb.DeleteCharacterResponse{
+			return &character.DeleteCharacterResponse{
 				MessageStatus: "404",
 				Message:       "character not found in the table",
-			},status.Errorf(codes.NotFound,"character not found in the table")
+			}, status.Errorf(codes.NotFound, "character not found in the table")
 		}
 		return nil, err
 	}
 
-
 	//Delete character with inputted id
-	if err := c.Db.Delete(&character).Error; err != nil {
-		return &pb.DeleteCharacterResponse{
+	if err := c.Db.Delete(&characterModel).Error; err != nil {
+		return &character.DeleteCharacterResponse{
 			MessageStatus: "500",
 			Message:       "cannot delete character",
 		}, status.Errorf(codes.Internal, "cannot delete character: %v", err)
 	}
 
 	//sucess response(no content)
-	return &pb.DeleteCharacterResponse{
+	return &character.DeleteCharacterResponse{
 		MessageStatus: "204",
 		Message:       "no content",
 	}, nil
 }
-

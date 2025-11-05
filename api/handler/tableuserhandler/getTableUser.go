@@ -15,7 +15,7 @@ import (
 // GetTableUserHandler
 // @Summary Get TableUser
 // @Schemes
-// @Description Get a table user by ID via query parameter
+// @Description Get a table tableUser by ID via query parameter
 // @Tags TableUser
 // @Accept json
 // @Produce json

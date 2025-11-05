@@ -2,6 +2,7 @@ package tableDTO
 
 import (
 	"fmt"
+
 	"gorm.io/gorm"
 )
 
@@ -26,23 +27,23 @@ type ErrorResponse struct {
 }
 
 type CreateTableRequest struct {
-	Name    string `json:"name"`
-	OwnerID uint   `json:"owner_id"`
+	Name string `json:"name"`
+	//OwnerID uint   `json:"owner_id"`
 	//InviteLink string             `json:"invite_link"`
 	Password string `json:"password"`
 }
 
 func (r *CreateTableRequest) Validate() error {
 
-	if r.Name == "" && r.Password == "" && r.OwnerID == 0 {
+	if r.Name == "" && r.Password == "" /* && r.OwnerID == 0*/ {
 		return fmt.Errorf("request body is empty")
 	}
 	if r.Name == "" {
 		return ErrParamIsRequired("name", "string")
 	}
-	if r.OwnerID == 0 {
-		return ErrParamIsRequired("owner_id", "uint")
-	}
+	//if r.OwnerID == 0 {
+	//	return ErrParamIsRequired("owner_id", "uint")
+	//}
 	//if r.InviteLink == ""{
 	//	return errParamIsRequired("invite_link", "string")
 	//}

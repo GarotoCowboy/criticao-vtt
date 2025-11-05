@@ -24,13 +24,13 @@ func createDataBaseIfNotExists(logger *Logger) error {
 		host, port, user, password)
 	db, err := gorm.Open(postgres.Open(connStr), &gorm.Config{})
 	if err != nil {
-		return fmt.Errorf("Failed to connect to database %v", err)
+		return fmt.Errorf("failed to connect to database %v", err)
 	}
 
 	//Close connection
 	sqlDB, err := db.DB()
 	if err != nil {
-		return fmt.Errorf("Failed to obtain sql.DB: %v", err)
+		return fmt.Errorf("failed to obtain sql.DB: %v", err)
 	}
 	defer sqlDB.Close()
 
@@ -38,14 +38,14 @@ func createDataBaseIfNotExists(logger *Logger) error {
 	var exists bool
 	err = db.Raw("SELECT EXISTS (SELECT 1 FROM pg_database WHERE datname = ?)", dbname).Scan(&exists).Error
 	if err != nil {
-		return fmt.Errorf("Failed to check if database %v exists %v", dbname, err)
+		return fmt.Errorf("failed to check if database %v exists %v", dbname, err)
 	}
 
 	//Creating Database
 	if !exists {
 		err = db.Exec(fmt.Sprintf("CREATE DATABASE %v", dbname)).Error
 		if err != nil {
-			return fmt.Errorf("Failed to create database %v", dbname)
+			return fmt.Errorf("failed to create database %v", dbname)
 		}
 		logger.InfoF("Database %v created", dbname)
 	} else {
@@ -88,6 +88,7 @@ func initializePostgreSQL() (*gorm.DB, error) {
 		&models.ChatMessage{},
 		&models.Scene{},
 		&models.Image{},
+		&models.GameObjectOwner{},
 		&models.PlacedImage{},
 		&models.PlacedToken{},
 		&models.Token{},

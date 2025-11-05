@@ -1,8 +1,8 @@
 package consts
 
-type GridType int
+type GridType uint8
 
 const (
-	Square GridType = iota + 1
+	Square = iota + 1
 	Hexagon
 )

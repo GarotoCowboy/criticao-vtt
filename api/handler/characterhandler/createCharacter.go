@@ -23,7 +23,6 @@ import (
 // @Failure 500 {object} characterDTO.ErrorResponse "Internal Server Error"
 // @Router /table/character [post]
 
-
 func CreateCharacterHandler(ctx *gin.Context) {
 
 	// Initialize an empty struct to hold the incoming JSON request data
@@ -37,7 +36,7 @@ func CreateCharacterHandler(ctx *gin.Context) {
 		return
 	}
 
-	// Call the user service to create a new user using the validated request data
+	// Call the tableUser service to create a new tableUser using the validated request data
 	// If the service returns an error, log it and return 500 Internal Server Error
 	//persona, err :=  character.CreateCharacter(handler.GetHandlerDB(),request)
 	//if err != nil {

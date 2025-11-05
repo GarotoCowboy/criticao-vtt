@@ -47,21 +47,21 @@ func DeleteUser(db *gorm.DB, id uint) (models.User, error) {
 
 	//Verify if id is valid
 	if id == 0 {
-		return models.User{}, errors.New("invalid user ID")
+		return models.User{}, errors.New("invalid tableUser ID")
 	}
 
 	var user = models.User{}
 
-	//Search first user with inputted id
+	//Search first tableUser with inputted id
 	if err := db.First(&user, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return models.User{}, errors.New("user not found")
+			return models.User{}, errors.New("tableUser not found")
 		}
 		return models.User{}, err
 
 	}
 
-	//Delete user with inputted id
+	//Delete tableUser with inputted id
 	if err := db.Delete(&user).Error; err != nil {
 		return models.User{}, err
 	}
@@ -70,14 +70,14 @@ func DeleteUser(db *gorm.DB, id uint) (models.User, error) {
 
 func GetUser(db *gorm.DB, id uint) (models.User, error) {
 	if id == 0 {
-		return models.User{}, errors.New("invalid user ID")
+		return models.User{}, errors.New("invalid tableUser ID")
 	}
 
 	var user = models.User{}
 
 	if err := db.Where("id=?", id).First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return models.User{}, errors.New("user not found")
+			return models.User{}, errors.New("tableUser not found")
 		}
 		return models.User{}, err
 	}
@@ -98,7 +98,7 @@ func ListUsers(db *gorm.DB) ([]models.User, error) {
 func UpdateUser(db *gorm.DB, id uint, req userDTO.UpdateUserRequest) (models.User, error) {
 
 	if id == 0 {
-		return models.User{}, errors.New("invalid user ID")
+		return models.User{}, errors.New("invalid tableUser ID")
 	}
 
 	userData, err := GetUser(db, id)
@@ -141,7 +141,7 @@ func UpdateUser(db *gorm.DB, id uint, req userDTO.UpdateUserRequest) (models.Use
 	}
 	if err := db.Save(&userData).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return models.User{}, errors.New("user not found")
+			return models.User{}, errors.New("tableUser not found")
 		}
 		return models.User{}, err
 	}

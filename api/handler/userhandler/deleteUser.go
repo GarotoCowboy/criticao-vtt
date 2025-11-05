@@ -23,7 +23,7 @@ import (
 // @Failure 400 {object} userDTO.ErrorResponse "Invalid ID supplied"
 // @Failure 404 {object} userDTO.ErrorResponse "User Not Found"
 // @Failure 500 {object} userDTO.ErrorResponse "Internal Server Error"
-// @Router /user [delete]
+// @Router /tableUser [delete]
 func DeleteUserHandler(ctx *gin.Context) {
 
 	//idStr := ctx.Query("id")
@@ -65,5 +65,5 @@ func DeleteUserHandler(ctx *gin.Context) {
 		ImageLink: userData.ImageLink,
 	}
 
-	handler.SendSucess(ctx, "delete-user", resp)
+	handler.SendSucess(ctx, "delete-tableUser", resp)
 }

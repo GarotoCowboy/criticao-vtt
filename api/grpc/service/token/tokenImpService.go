@@ -188,6 +188,6 @@ func (s *TokenService) ListAllTokenInTable(ctx context.Context, req *token.ListT
 	}
 
 	return &token.ListTokenResponse{
-		Token: responseToken,
+		Tokens: responseToken,
 	}, nil
 }

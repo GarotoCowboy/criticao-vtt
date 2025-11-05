@@ -23,7 +23,7 @@ import (
 // @Success 200 {object} userDTO.UserResponse "No content"
 // @Failure 400 {object} userDTO.ErrorResponse "Invalid ID supplied"
 // @Failure 404 {object} userDTO.ErrorResponse "User Not Found"
-// @Router /user [get]
+// @Router /tableUser [get]
 func GetUserHandler(ctx *gin.Context) {
 
 	idStr := ctx.Query("id")

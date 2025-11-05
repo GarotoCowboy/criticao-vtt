@@ -17,6 +17,6 @@ type Scene struct {
 	GridCellDistance    uint            `json:"distance_grid_cells"`
 	GridType            consts.GridType `json:"grid_type" gorm:"not null"`
 	PlacedTokens        []*PlacedToken  `json:"placedTokens" gorm:"foreignKey:SceneID"`
-	PlacedImages        []*PlacedImage  `json:"placedImages" gorm:"foreignKey:SceneID"`
+	PlacedImages        []*PlacedImage  `json:"placedImage" gorm:"foreignKey:SceneID"`
 	Drawings            []*Drawing      `json:"drawing" gorm:"foreignKey:SceneID"`
 }

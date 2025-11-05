@@ -2,12 +2,13 @@ package tormenta20Rules
 
 import (
 	"fmt"
-	"github.com/GarotoCowboy/vttProject/api/grpc/proto/character/pb"
+
+	"github.com/GarotoCowboy/vttProject/api/grpc/pb/character"
+
 	"strings"
 )
 
 type RulesService struct {
-
 }
 
 type InitialCharacterInputsT20 struct {
@@ -46,21 +47,27 @@ func NewRulesService() *RulesService {
 //}
 
 // create a function that search an attribute based on const Attribute
-func (s *RulesService) getT20Attribute(sheet *pb.Sheet ,attribute Attribute) (int, error) {
+func (s *RulesService) getT20Attribute(sheet *character.Sheet, attribute Attribute) (int, error) {
 
 	switch attribute {
 	case Intelligence:
 		return int(sheet.Attributes.Intelligence), nil
 	case Charisma:
 		return int(sheet.Attributes.Charisma), nil
-	case Strength:return int(sheet.Attributes.Strength), nil
-	case Dexterity:return int(sheet.Attributes.Dexterity), nil
-	case Constitution:return int(sheet.Attributes.Constitution), nil
-	case Wisdom:return int(sheet.Attributes.Wisdom), nil
-	default:return 0, fmt.Errorf("Value not Found")
+	case Strength:
+		return int(sheet.Attributes.Strength), nil
+	case Dexterity:
+		return int(sheet.Attributes.Dexterity), nil
+	case Constitution:
+		return int(sheet.Attributes.Constitution), nil
+	case Wisdom:
+		return int(sheet.Attributes.Wisdom), nil
+	default:
+		return 0, fmt.Errorf("Value not Found")
 	}
 
 }
+
 // function that pick the level and return the bonus based if he's trained on that skill
 func (s *RulesService) calculateTrainedBonus(level int, isTrained bool) (int, error) {
 
@@ -114,7 +121,7 @@ func (s *RulesService) calculateTrainedBonus(level int, isTrained bool) (int, er
 //	return sheet, nil
 //}
 
-func (s *RulesService) CalculateSheetSkillsAutomatically(sheet *pb.Sheet) (*pb.Sheet, error) {
+func (s *RulesService) CalculateSheetSkillsAutomatically(sheet *character.Sheet) (*character.Sheet, error) {
 
 	if sheet == nil || sheet.Skills == nil {
 		return nil, fmt.Errorf("sheet or skills is nil")
@@ -131,49 +138,47 @@ func (s *RulesService) CalculateSheetSkillsAutomatically(sheet *pb.Sheet) (*pb.S
 		//}
 
 		normalizedAttr, err := normalizeAttributeName(skillData.CurrentBaseAttribute)
-		if err != nil{
-			return nil, fmt.Errorf("skill '%s' have an invalid attribute: %v", skillName,err)
+		if err != nil {
+			return nil, fmt.Errorf("skill '%s' have an invalid attribute: %v", skillName, err)
 		}
 
 		skillData.CurrentBaseAttribute = normalizedAttr
 
 		baseAttribute := Attribute(normalizedAttr)
 
-		attribute, err := s.getT20Attribute(sheet,baseAttribute)
+		attribute, err := s.getT20Attribute(sheet, baseAttribute)
 		if err != nil {
-			return nil, fmt.Errorf("error to pick attribute %s: %v\n",baseAttribute,err)
+			return nil, fmt.Errorf("error to pick attribute %s: %v\n", baseAttribute, err)
 		}
 
 		trainedBonus, err := s.calculateTrainedBonus(int(sheet.ClassAndLevel.Level), skillData.Trained)
 		if err != nil {
-			return nil, fmt.Errorf("error to calculate trained Bonus %s: %v\n",baseAttribute,err)
+			return nil, fmt.Errorf("error to calculate trained Bonus %s: %v\n", baseAttribute, err)
 		}
 
-		skillData.Bonus = int32(attribute + levelBonus + trainedBonus)+skillData.OtherBonus
+		skillData.Bonus = int32(attribute+levelBonus+trainedBonus) + skillData.OtherBonus
 		sheet.Skills[skillName] = skillData
 	}
 
 	return sheet, nil
 }
 
-func (s *RulesService) CalculateSheetDefenseAutomatically(sheet *pb.Sheet) (*pb.Sheet, error) {
+func (s *RulesService) CalculateSheetDefenseAutomatically(sheet *character.Sheet) (*character.Sheet, error) {
 
-
-
-	attributeBonus, err := s.getT20Attribute(sheet,Dexterity)
+	attributeBonus, err := s.getT20Attribute(sheet, Dexterity)
 	if err != nil {
-		return nil, fmt.Errorf("error to pick attribute %s: %v\n",attributeBonus,err)
+		return nil, fmt.Errorf("error to pick attribute %s: %v\n", attributeBonus, err)
 	}
 
 	baseBonus := int32(10)
 	sheet.Armor.Defense = baseBonus + sheet.Armor.ArmorBonus + sheet.Armor.OtherBonus + sheet.Armor.ShieldBonus
-	if sheet.Armor.DexterityBonus == true{
+	if sheet.Armor.DexterityBonus == true {
 		sheet.Armor.Defense += int32(attributeBonus)
 	}
 	return sheet, nil
 }
 
-func normalizeAttributeName(attr string) (string,error) {
+func normalizeAttributeName(attr string) (string, error) {
 	switch attrLower := strings.ToLower(attr); attrLower {
 	case "strength":
 		return "Strength", nil
@@ -188,6 +193,6 @@ func normalizeAttributeName(attr string) (string,error) {
 	case "charisma":
 		return "Charisma", nil
 	default:
-		return "",fmt.Errorf("invalid attribute: '%s'",attr)
+		return "", fmt.Errorf("invalid attribute: '%s'", attr)
 	}
 }
