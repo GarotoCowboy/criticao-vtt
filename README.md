@@ -69,7 +69,7 @@ A aplicação utiliza uma abordagem híbrida para máxima eficiência:
 ## 📊 Diagramas
 ### Diagrama de Casos de Uso (Inicial)
 ![projeto vtt-Caso de Uso drawio](https://github.com/user-attachments/assets/4ecb1797-9342-4c5a-aa71-516118f249bd)
-*O projeto está em desenvolvimento e poderá haver alterações dos diagramas conforme a implementação do frontend avança.*
+*O projeto está em desenvolvimento e poderá haver alterações dos diagramas conforme a implementação do sistema avança.*
 
 ---
 
