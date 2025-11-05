@@ -1,0 +1,122 @@
+syntax = "proto3";
+
+package token;
+
+option go_package = "github.com/GarotoCowboy/vttProject/api/grpc/pb/token;token";
+
+import "google/protobuf/field_mask.proto";
+import "google/protobuf/empty.proto";
+
+// The `TokenService` manages token templates within a table's shared library.
+// These are the master copies of tokens that can then be placed onto scenes.
+service TokenService{
+  // Creates a new token template and adds it to the table's library.
+  rpc CreateToken(CreateTokenRequest) returns (CreateTokenResponse);
+
+  // Edits the properties of an existing token template (e.g., name, image).
+  rpc EditToken(EditTokenRequest) returns (EditTokenResponse);
+
+  // Deletes a token template from the library.
+  rpc DeleteToken(DeleteTokenRequest) returns (DeleteTokenResponse);
+
+  // Lists all token templates available in a specific table's library.
+  rpc ListAllTokenInTable(ListTokenRequest) returns (ListTokenResponse);
+}
+
+// Represents a token template in the library.
+message Token{
+  // The unique identifier for the token template.
+  uint64 token_id = 1;
+  // The ID of the table this token template belongs to.
+  uint64 table_id = 2;
+  // The name of the token (e.g., "Goblin Archer", "Player Character").
+  string name = 3;
+  // The URL of the image used for this token.
+  string image_url = 4;
+}
+
+// Request to create a new token template.
+message CreateTokenRequest{
+  // The ID of the table where this token will be created.
+  uint64 table_id = 1;
+  // The name for the new token.
+  string name = 2;
+  // The image URL for the new token.
+  string image_url = 3;
+}
+
+// Response after creating a token, containing the new token object.
+message CreateTokenResponse{
+  // The complete token object as it was created.
+  Token token = 1;
+}
+
+// Request to edit an existing token template.
+message EditTokenRequest{
+  // The token object with the new data. `token_id` must be specified.
+  Token token = 1;
+  // A field mask to specify which fields should be updated (e.g., "name", "image_url").
+  google.protobuf.FieldMask mask = 2;
+}
+
+// Response after editing a token, containing the updated token object.
+message EditTokenResponse{
+  // The token object with the applied updates.
+  Token token = 1;
+}
+
+// Request to delete a token template.
+message DeleteTokenRequest{
+  // The unique ID of the token to be deleted.
+  uint64 token_id = 1;
+  // The ID of the table the token belongs to, for validation.
+  uint64 table_id = 2;
+}
+
+// Response for a delete operation.
+message DeleteTokenResponse{
+  // An empty message indicates success.
+  google.protobuf.Empty empty = 1;
+}
+
+// Request to list all token templates for a table.
+message ListTokenRequest{
+  // The ID of the table whose tokens are to be listed.
+  uint64 table_id = 1;
+}
+
+// Response containing a list of all token templates in a table's library.
+message ListTokenResponse{
+  // A list of token objects.
+  repeated Token tokens = 1;
+}
+
+// --- Event Messages for real-time synchronization ---
+
+
+// Event triggered when a new token template is created.
+message TokenCreated{
+  // The newly created token template.
+  Token token = 1;
+}
+
+// Event triggered when a token template's properties are updated.
+message TokenUpdated{
+  // The token template with its updated data.
+  Token token = 1;
+}
+
+// Event triggered when a token template is deleted.
+message TokenDeleted{
+  // The ID of the table from which the token was deleted.
+  uint64 table_id = 1;
+  // The ID of the token template that was deleted.
+  uint64 token_id = 2;
+}
+
+// NOTE: This event is unconventional. Typically, events broadcast a single action (create, update, delete).
+// An event that sends a whole list might be intended for initial state synchronization.
+message tokenListed{
+  // A list of tokens, possibly for syncing the entire library state at once.
+  repeated Token token = 1;
+}
