@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/joho/godotenv"
 	"gorm.io/gorm"
 )
 
@@ -55,5 +56,14 @@ func CreateFileFolder() error {
 		logger.InfoF("Create files folder successfully")
 	}
 
+	return nil
+}
+
+func LoadENV() error {
+	err := godotenv.Load(".env")
+	if err != nil {
+		logger.ErrorF("Error loading .env file")
+		return err
+	}
 	return nil
 }

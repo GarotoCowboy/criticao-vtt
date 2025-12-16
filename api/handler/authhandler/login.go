@@ -16,14 +16,15 @@ func LoginHandler(ctx *gin.Context) {
 		return
 	}
 
-	token, err := auth.LoginService(handler.GetHandlerDB(), request)
+	token, expiresAt, err := auth.LoginService(handler.GetHandlerDB(), request)
 	if err != nil {
 		handler.SendError(ctx, http.StatusUnauthorized, err.Error())
 		return
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"message": "login successful",
-		"token":   token,
+		"message":    "login successful",
+		"token":      token,
+		"expires_at": expiresAt,
 	})
 }

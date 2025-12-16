@@ -25,12 +25,19 @@ func main() {
 
 	logger = config.GetLogger("main")
 
+	//load .env
+	if err := config.LoadENV(); err != nil {
+		logger.ErrorF("error loading env: %v", err)
+		return
+	}
+
 	//Initialize config
 	err := config.InitPostgres()
 	if err != nil {
 		logger.ErrorF("config initialization error: %v", err)
 		return
 	}
+
 	//create libraryImg folder if not exits
 	if err := config.CreateImgFolder(); err != nil {
 		logger.ErrorF("Error... Creating image folder: %v", err)
