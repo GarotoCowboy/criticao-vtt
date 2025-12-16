@@ -2,22 +2,29 @@ package router
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"log"
+	"os"
+
+	"github.com/gin-gonic/gin"
 )
 
-var (
+/*var (
 	port = "8080"
 	host = "localhost"
-)
+)*/
 
 func Initializer() {
+	port := os.Getenv("PORT_REST")
+	host := os.Getenv("REST_HOST")
+
+	routerHost := fmt.Sprintf("%s:%s", host, port)
+
 	router := gin.Default()
 
 	initializeRoutes(router)
-	err := router.Run("localhost:8080")
+	err := router.Run(routerHost)
 	if err != nil {
 		log.Fatal("Is not possible run server", err)
 	}
-	fmt.Println("Server started on localhost:8080")
+	fmt.Printf("Server started on %s", routerHost)
 }

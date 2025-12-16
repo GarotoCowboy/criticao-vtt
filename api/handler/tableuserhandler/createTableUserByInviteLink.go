@@ -24,6 +24,19 @@ import (
 // @Failure 500 {object} tableUserDTO.ErrorResponse "Internal Server Error"
 // @Router /tableUser/inviteLink [post]
 func CreateTableUserByInviteLinkHandler(ctx *gin.Context) {
+
+	userIDValue, exists := ctx.Get("user_id")
+	if !exists {
+		handler.SendError(ctx, http.StatusUnauthorized, "user_id not found in context")
+		return
+	}
+
+	userID, ok := userIDValue.(uint)
+	if !ok {
+		handler.SendError(ctx, http.StatusUnauthorized, "invalid user_id type in context")
+		return
+	}
+
 	request := tableUserDTO.CreateTableUserInviteLinkRequest{}
 
 	if err := ctx.BindJSON(&request); err != nil {
@@ -32,7 +45,7 @@ func CreateTableUserByInviteLinkHandler(ctx *gin.Context) {
 		return
 	}
 
-	tableUser, err := tableUserService.CreateTableUserByInviteLink(handler.GetHandlerDB(), request)
+	tableUser, err := tableUserService.CreateTableUserByInviteLink(userID, handler.GetHandlerDB(), request)
 
 	if err != nil {
 		handler.GetHandlerLogger().ErrorF("Error creating tableUser: %v", err.Error())
