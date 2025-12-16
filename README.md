@@ -185,21 +185,15 @@ Os diagramas podem evoluir conforme o projeto avança.
 
 ✅ v1.0 – Backend concluído
 
-REST + gRPC
-
-Arquitetura em camadas
-
-Tempo real funcional
-
-Banco de dados integrado
+- REST + gRPC
+- Arquitetura em camadas
+- Tempo real funcional
+- Banco de dados integrado
 
 🚧 v2.0 – Frontend
-
-Desenvolvimento das telas em Flutter
-
-Interface multi-plataforma
-
-Consumo completo dos serviços backend
+- Desenvolvimento das telas em Flutter
+- Interface multi-plataforma
+- Consumo completo dos serviços backend
 
 👨‍💻 Autor
 
