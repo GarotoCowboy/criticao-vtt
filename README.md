@@ -1,144 +1,210 @@
-<div align = "center"> <h1>CriticãoVTT: Uma Plataforma Gratuita para RPG de Mesa</h1></div>
-<div align="center"><img src="https://github.com/user-attachments/assets/a478f526-e66e-41de-a6e9-1379f93c5f88" width="250px">
-  <p><i>A nossa mascote Lili mordendo um d20</i></p>
-</div>
 <div align="center">
-  <h3>Plataforma RESTful com gRPC para RPG de Mesa</h3>
-  <p><i>Projeto desenvolvido para aperfeiçoar conhecimentos em Go (Golang), gRPC, Flutter e arquitetura de software.</i></p>
+  <h1>🎲 CriticãoVTT</h1>
+  <p><strong>Uma plataforma gratuita e brasileira para RPG de Mesa</strong></p>
+</div>
+
+<div align="center">
+  <img src="https://github.com/user-attachments/assets/a478f526-e66e-41de-a6e9-1379f93c5f88" width="250px"/>
+  <p><i>Lili, a mascote oficial do CriticãoVTT, mordendo um d20</i></p>
 </div>
 
 ---
 
-## 🧠 Objetivo
-Este projeto visa a criação de uma plataforma robusta para jogadores de RPG de mesa. A ideia surgiu para preencher uma lacuna no mercado brasileiro, onde as plataformas existentes costumam ser muito caras (muitas vezes cobrando em dólar), oferecendo uma solução acessível e de alta performance para a comunidade.
+## 📌 Visão Geral
 
-Servindo como um estudo prático e aprofundado nas seguintes áreas:
-- **Go (Golang)**: Desenvolvimento de APIs RESTful e serviços gRPC concorrentes.
-- **PostgreSQL**: Modelagem de dados e interações com banco de dados relacional.
-- **Flutter**: Desenvolvimento da interface do usuário (UI) multi-plataforma.
-- **Arquitetura de Software**: Aplicação de arquitetura em camadas (Services, Handlers, DTOs) e sistemas orientados a eventos (Pub/Sub).
-- **Ferramentas e ORMs**: Utilização de GORM e documentação com Swagger.
+O **CriticãoVTT** é uma plataforma de **Virtual Tabletop (VTT)** desenvolvida para jogadores de RPG de mesa, com foco no **mercado brasileiro**, oferecendo uma alternativa **gratuita**, **local** e **sem custos em dólar**.
 
----
-## 🚀 Funcionalidades Principais
-O sistema permitirá o gerenciamento de usuários, mesas de RPG e a relação entre eles, com as seguintes funcionalidades:
-
-### Gerenciamento de Usuários
-- **CRUD de Usuários**: Criação, visualização, listagem, atualização e exclusão de contas de usuário.
-- **Upload de Imagem de Usuário**: Permitir que usuários adicionem imagens aos seus perfis.
-
-### Gerenciamento de Mesas de RPG
-- **CRUD de Mesas**: Criação (com geração de link de convite), visualização, listagem, atualização e exclusão de mesas de RPG.
-- **Propriedade de Mesas**: Cada mesa possui um usuário proprietário (Mestre do Jogo).
-
-### Gerenciamento de Participantes da Mesa (TableUser)
-- **Associação Usuário-Mesa**: Adicionar e remover usuários de mesas, definindo seus papéis (ex: Jogador, Mestre).
-- **Listagem de Participantes**: Visualizar os usuários associados a uma mesa específica.
-
-- ### Chat em tempo Real
-- **Create de Mensagens**: Criação e envio de mensagens bidirecional para usuários conectados em uma mesa, utilizando de pub/sub
-- ** List de Mensagens**: Lista todas as mensagens enviadas em uma mesa utilizando server streaming.
-- **Envio de Mensagens Privadas**: Usuários poderão enviar mensagens privadas para outros usuários em uma mesa
-
-- ### Tabuleiro em tempo Real
-- **Create de Scene**: Criação de uma tabuleiro para usuários conectados em uma mesa, utilizando de pub/sub
-- ** move de token**: Usuários podem mover suas peças no tabuleiro utilizando eventos pub/sub.
-- **Create de images**: Usuário mestre pode enviar imagens avulsas para o tabuleiro utilizando eventos pub/sub.
-
-- ### Personagem
-- **Criação e Gerenciamento**: Criação de fichas de personagem associadas a um sistema (atualmente Tormenta 20).
-- **Atualização em Tempo Real**: Atualização da ficha de personagem (atributos, perícias, etc.) com propagação instantânea para todos os clientes via streams bidirecionais.
-- **Lógica de Regras**: A arquitetura atual permite a implementação de regras de diferentes sistemas de RPG, com Tormenta 20 já implementado para o cálculo automático de bônus. A estrutura visa ser genérica para suportar D&D, GURPS, etc. no futuro.
--  
-*(Funcionalidades adicionais como rolagem de dados, Tabuleiro, chat de video e outras interações via gRPC estão planejadas para fases futuras do desenvolvimento)*.
+O projeto foi criado como um estudo prático e aprofundado em **Go (Golang)**, **gRPC**, **arquitetura de software**, **sistemas em tempo real** e **desenvolvimento backend moderno**, servindo também como base para evolução futura em frontend e mobile.
 
 ---
 
-## 🛠 Tecnologias
+## 🎯 Objetivo do Projeto
+
+- Criar uma plataforma robusta para RPG de mesa
+- Evitar dependência de soluções caras e estrangeiras
+- Explorar arquitetura em camadas e sistemas orientados a eventos
+- Estudar comunicação em tempo real com gRPC
+- Desenvolver uma base extensível para múltiplos sistemas de RPG
+
+---
+
+## 🚀 Funcionalidades
+
+### 👤 Gerenciamento de Usuários
+- CRUD completo de usuários
+- Upload de imagem de perfil
+- Autenticação com **JWT**
+
+### 🎲 Gerenciamento de Mesas de RPG
+- CRUD de mesas
+- Geração de link de convite
+- Definição de proprietário da mesa (Mestre)
+
+### 👥 Participantes da Mesa (TableUser)
+- Associação usuário ↔ mesa
+- Definição de papéis (Jogador, Mestre)
+- Listagem de participantes por mesa
+
+---
+
+### 💬 Chat em Tempo Real (gRPC)
+- Envio de mensagens via **Pub/Sub**
+- Listagem de mensagens com **Server Streaming**
+- Mensagens privadas entre usuários da mesa
+
+---
+
+### 🗺️ Tabuleiro em Tempo Real
+- Criação de cenas
+- Movimentação de tokens em tempo real
+- Envio de imagens para o tabuleiro pelo mestre
+- Sincronização via eventos gRPC
+
+---
+
+### 🧙 Personagens
+- Criação e gerenciamento de fichas
+- Atualização em tempo real (streams bidirecionais)
+- Sistema de regras implementado para **Tormenta 20**
+- Estrutura genérica para suportar futuramente:
+  - D&D
+  - GURPS
+  - Outros sistemas
+
+> Funcionalidades futuras planejadas:
+> - Chat por vídeo
+> - Loja de plugins e sistemas
+
+---
+
+## 🧱 Arquitetura
+
+- Arquitetura em camadas:
+  - **Handlers**
+  - **Services**
+  - **DTOs**
+  - **Models**
+- Backend orientado a eventos
+- Comunicação REST + gRPC
+- Autenticação via JWT
+- Pub/Sub para tempo real
+
+---
+
+## 🛠 Tecnologias Utilizadas
+
 ### Backend (Concluído)
-[![Go](https://img.shields.io/badge/Go-00ADD8?style=for-the-badge&logo=go&logoColor=white)](https://golang.org/)
-[![gRPC](https://img.shields.io/badge/gRPC-4283F3?style=for-the-badge&logo=grpc&logoColor=white)](https://grpc.io/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
-[![Gin Gonic](https://img.shields.io/badge/Gin%20Gonic-009485?style=for-the-badge&logo=gin&logoColor=white)](https://gin-gonic.com/)
-[![GORM](https://img.shields.io/badge/GORM-C42B9F?style=for-the-badge&logo=gorm&logoColor=white)](https://gorm.io/)
-[![Swagger](https://img.shields.io/badge/Swagger-85EA2D?style=for-the-badge&logo=swagger&logoColor=black)](https://swagger.io/)
+- **Go (Golang)**
+- **Gin Gonic**
+- **gRPC**
+- **PostgreSQL**
+- **GORM**
+- **JWT**
+- **Swagger**
 
 ### Frontend (Planejado)
-[![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org/)
-[![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/HTML5)
-[![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/CSS)
+- **React** (alternativo)
+- **HTML / CSS**
+
+---
 
 ## 📋 Pré-requisitos
-    
-- Golang 1.25.0
-- Postgres 17.5
-- protobuf compiler
 
-## ⚙️ Configuração
+- Go **1.25.0** ou superior
+- PostgreSQL **17.5**
+- Protobuf Compiler (`protoc`)
 
-### 1. Clone o repositório
+---
 
-````
+## ⚙️ Configuração do Ambiente
+
+### 1️⃣ Clone o repositório
+
+```bash 
 git clone https://github.com/GarotoCowboy/criticao-vtt
 cd criticao-vtt
-````
+```
 
-### 2. Configure as variáveis de ambiente
+### 2️⃣ Configure o arquivo .env
 
-crie um arquivo ````.env```` na raiz do projeto:
-````
-#file: .env
+#### Crie um arquivo .env na raiz do projeto:
 
+```env
 # DATABASE
+DB_HOST=localhost
+DB_USERNAME=postgres
 DB_PASSWORD=senha_database
-DB_USERNAME=usuario_database
-DB_HOST=ip_database
+DB_URL=postgres://usuario:senha@host:porta/database
 
 # REST
-REST_HOST=ip_serviço_rest
-PORT_REST=porta_serviço_rest
+REST_HOST=localhost
+PORT_REST=8080
 
 # GRPC
-GRPC_HOST=ip_serviço_grpc
-PORT_GRPC=porta_serviço_grpc
+GRPC_HOST=localhost
+PORT_GRPC=50051
 
-````
-### 3. Executar a aplicação
-````
+```
+
+### ▶️ Executando a Aplicação
+```
 #Desenvolvimento
 go run main.go
 
 #Produção
 go build
-````
+./criticao-vtt
+```
 
-A API REST estará disponível em: ````http://{REST_HOST}:{REST_PORT}```` 
+### 🌐 Endpoints
 
-A API GRPC estará disponível em: ````http://{GRPC_HOST}:{GRPC_PORT}````
+```
+#REST API:
+http://{REST_HOST}:{PORT_REST}
 
-### 3. 📚 Documentação da API
-A documentação da API está no link: https://vttproject.postman.co/workspace/golangapi~d97bdf1e-aada-4788-86b2-8949b8d429bb/collection/24061336-6431ac82-57f0-4799-ae4f-61b9c5be2dac?action=share&creator=24061336
+#gRPC:
+{GRPC_HOST}:{PORT_GRPC}
+```
 
-*Ferramentas complementares:*
-- Testes Unitários (planejado/em desenvolvimento inicial).
 
----
+### 📚 Documentação da API
 
-## 📋 Status do Projeto
-- **v1.0 - Backend:** O desenvolvimento da API REST e dos serviços gRPC em Go (Golang) está finalizado. A arquitetura em camadas (Services, Handlers, DTOs), a integração com banco de dados (PostgreSQL + GORM) e os sistemas de tempo real (gRPC + Pub/Sub) estão implementados e funcionais.
-- **v2.0 - Frontend (Próximos Passos):** O foco agora será no desenvolvimento das telas e da interface do usuário (UI) utilizando Flutter, para criar uma interface amigável, fluida e multi-plataforma que consumirá os serviços do backend.
+Postman Collection:
+https://vttproject.postman.co/workspace/golangapi~d97bdf1e-aada-4788-86b2-8949b8d429bb/collection/24061336-6431ac82-57f0-4799-ae4f-61b9c5be2dac?action=share&creator=24061336
 
----
-
-## 📊 Diagramas
-### Diagrama de Casos de Uso (Inicial)
+### 📊 Diagramas
+#### Diagrama de Casos de Uso (Inicial)
 ![projeto vtt-Caso de Uso drawio](https://github.com/user-attachments/assets/4ecb1797-9342-4c5a-aa71-516118f249bd)
 *O projeto está em desenvolvimento e poderá haver alterações dos diagramas conforme a implementação do sistema avança.*
 
----
 
-## 🧑‍💻 Autor
-Pedro Henrique Marques Rocha - Aluno de Sistemas de Informação do Instituto Federal Goiano Campus Urutaí.
 
----
-*Este projeto está em fase de desenvolvimento.*
+Os diagramas podem evoluir conforme o projeto avança.
+
+📌 Status do Projeto
+
+✅ v1.0 – Backend concluído
+
+REST + gRPC
+
+Arquitetura em camadas
+
+Tempo real funcional
+
+Banco de dados integrado
+
+🚧 v2.0 – Frontend
+
+Desenvolvimento das telas em Flutter
+
+Interface multi-plataforma
+
+Consumo completo dos serviços backend
+
+👨‍💻 Autor
+
+Pedro Henrique Marques Rocha
+Aluno de Sistemas de Informação
+Instituto Federal Goiano – Campus Urutaí
+
+
