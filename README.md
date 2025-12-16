@@ -21,7 +21,6 @@ Este projeto visa a criação de uma plataforma robusta para jogadores de RPG de
 O projeto busca ser uma alternativa às plataformas existentes no mercado para RPG de mesa.
 
 ---
-
 ## 🚀 Funcionalidades Principais
 O sistema permitirá o gerenciamento de usuários, mesas de RPG e a relação entre eles, com as seguintes funcionalidades:
 
@@ -41,6 +40,11 @@ O sistema permitirá o gerenciamento de usuários, mesas de RPG e a relação en
 - **Create de Mensagens**: Criação e envio de mensagens bidirecional para usuários conectados em uma mesa, utilizando de pub/sub
 - ** List de Mensagens**: Lista todas as mensagens enviadas em uma mesa utilizando server streaming.
 - **Envio de Mensagens Privadas**: Usuários poderão enviar mensagens privadas para outros usuários em uma mesa
+
+- ### Tabuleiro em tempo Real
+- **Create de Scene**: Criação de uma tabuleiro para usuários conectados em uma mesa, utilizando de pub/sub
+- ** move de token**: Usuários podem mover suas peças no tabuleiro utilizando eventos pub/sub.
+- **Create de images**: Usuário mestre pode enviar imagens avulsas para o tabuleiro utilizando eventos pub/sub.
 
 - ### Personagem
 - **Criação e Gerenciamento**: Criação de fichas de personagem associadas a um sistema (atualmente Tormenta 20).
@@ -64,6 +68,57 @@ O sistema permitirá o gerenciamento de usuários, mesas de RPG e a relação en
 [![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org/)
 [![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/HTML5)
 [![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/CSS)
+
+## 📋 Pré-requisitos
+    
+- Golang 1.25.0
+- Postgres 17.5
+- protobuf compiler
+
+## ⚙️ Configuração
+
+### 1. Clone o repositório
+
+````
+git clone https://github.com/GarotoCowboy/criticao-vtt
+cd criticao-vtt
+````
+
+### 2. Configure as variáveis de ambiente
+
+crie um arquivo ````.env```` na raiz do projeto:
+````
+#file: .env
+
+# DATABASE
+DB_PASSWORD=senha_database
+DB_USERNAME=usuario_database
+DB_HOST=ip_database
+
+# REST
+REST_HOST=ip_serviço_rest
+PORT_REST=porta_serviço_rest
+
+# GRPC
+GRPC_HOST=ip_serviço_grpc
+PORT_GRPC=porta_serviço_grpc
+
+````
+### 3. Executar a aplicação
+````
+#Desenvolvimento
+go run main.go
+
+#Produção
+go build
+````
+
+A API REST estará disponível em: ````http://{REST_HOST}:{REST_PORT}```` 
+
+A API GRPC estará disponível em: ````http://{GRPC_HOST}:{GRPC_PORT}````
+
+### 3. 📚 Documentação da API
+A documentação da API está no link: https://vttproject.postman.co/workspace/golangapi~d97bdf1e-aada-4788-86b2-8949b8d429bb/collection/24061336-6431ac82-57f0-4799-ae4f-61b9c5be2dac?action=share&creator=24061336
 
 *Ferramentas complementares:*
 - Testes Unitários (planejado/em desenvolvimento inicial).
