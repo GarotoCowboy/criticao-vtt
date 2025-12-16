@@ -8,11 +8,13 @@ import (
 )
 
 // Method generate a new JWT with userID
-func GenerateJWT(userID uint) (string, error) {
+func GenerateJWT(userID uint) (string, time.Time, error) {
+
+	expiresAt := time.Now().Add(time.Hour * 24)
 
 	claims := jwt.MapClaims{
 		"user_id": userID,
-		"exp":     time.Now().Add(time.Hour * 24).Unix(),
+		"exp":     expiresAt.Unix(),
 		"iat":     time.Now().Unix(),
 	}
 
@@ -20,7 +22,7 @@ func GenerateJWT(userID uint) (string, error) {
 
 	tokenString, err := token.SignedString(config.JWT_SECRET)
 	if err != nil {
-		return "", err
+		return "", time.Time{}, err
 	}
-	return tokenString, nil
+	return tokenString, expiresAt, nil
 }

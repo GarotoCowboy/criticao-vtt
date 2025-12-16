@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/GarotoCowboy/vttProject/api/models"
 	"gorm.io/driver/postgres"
@@ -9,15 +10,15 @@ import (
 )
 
 const (
-	host     = "localhost"
-	user     = "postgres"
-	password = "admin"
 	dbname   = "vtt"
 	port     = "5432"
 	timeZone = "america/Sao_Paulo"
 )
 
 func createDataBaseIfNotExists(logger *Logger) error {
+	user := os.Getenv("DB_USERNAME")
+	password := os.Getenv("DB_PASSWORD")
+	host := os.Getenv("DB_HOST")
 
 	//Connection with default database "postgres"
 	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=postgres sslmode=disable",
@@ -56,6 +57,11 @@ func createDataBaseIfNotExists(logger *Logger) error {
 }
 
 func initializePostgreSQL() (*gorm.DB, error) {
+
+	user := os.Getenv("DB_USERNAME")
+	password := os.Getenv("DB_PASSWORD")
+	host := os.Getenv("DB_HOST")
+
 	logger := GetLogger("postgreSQL")
 
 	if err := createDataBaseIfNotExists(logger); err != nil {
