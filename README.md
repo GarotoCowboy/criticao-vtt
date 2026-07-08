@@ -2,9 +2,10 @@
 <div align="center"><img src="https://github.com/user-attachments/assets/a478f526-e66e-41de-a6e9-1379f93c5f88" width="250px">
   <p><i>A nossa mascote Lili mordendo um d20</i></p>
 </div>
+
 <div align="center">
-  <h3>Plataforma RESTful com gRPC para RPG de Mesa</h3>
-  <p><i>Projeto desenvolvido para aperfeiçoar conhecimentos em Go (Golang), tecnologias de backend e frontend.</i></p>
+  <img src="https://github.com/user-attachments/assets/a478f526-e66e-41de-a6e9-1379f93c5f88" width="250px"/>
+  <p><i>Lili, a mascote oficial do CriticãoVTT, mordendo um d20</i></p>
 </div>
 
 ---
@@ -21,37 +22,18 @@ Este projeto visa a criação de uma plataforma robusta para jogadores de RPG de
 O projeto busca ser uma alternativa às plataformas existentes no mercado para RPG de mesa.
 
 ---
-## 🚀 Funcionalidades Principais
-O sistema permitirá o gerenciamento de usuários, mesas de RPG e a relação entre eles, com as seguintes funcionalidades:
 
-### Gerenciamento de Usuários
-- **CRUD de Usuários**: Criação, visualização, listagem, atualização e exclusão de contas de usuário.
-- **Upload de Imagem de Usuário**: Permitir que usuários adicionem imagens aos seus perfis.
+## 🧱 Arquitetura
 
-### Gerenciamento de Mesas de RPG
-- **CRUD de Mesas**: Criação (com geração de link de convite), visualização, listagem, atualização e exclusão de mesas de RPG.
-- **Propriedade de Mesas**: Cada mesa possui um usuário proprietário (Mestre do Jogo).
-
-### Gerenciamento de Participantes da Mesa (TableUser)
-- **Associação Usuário-Mesa**: Adicionar e remover usuários de mesas, definindo seus papéis (ex: Jogador, Mestre).
-- **Listagem de Participantes**: Visualizar os usuários associados a uma mesa específica.
-
-- ### Chat em tempo Real
-- **Create de Mensagens**: Criação e envio de mensagens bidirecional para usuários conectados em uma mesa, utilizando de pub/sub
-- ** List de Mensagens**: Lista todas as mensagens enviadas em uma mesa utilizando server streaming.
-- **Envio de Mensagens Privadas**: Usuários poderão enviar mensagens privadas para outros usuários em uma mesa
-
-- ### Tabuleiro em tempo Real
-- **Create de Scene**: Criação de uma tabuleiro para usuários conectados em uma mesa, utilizando de pub/sub
-- ** move de token**: Usuários podem mover suas peças no tabuleiro utilizando eventos pub/sub.
-- **Create de images**: Usuário mestre pode enviar imagens avulsas para o tabuleiro utilizando eventos pub/sub.
-
-- ### Personagem
-- **Criação e Gerenciamento**: Criação de fichas de personagem associadas a um sistema (atualmente Tormenta 20).
-- **Atualização em Tempo Real**: Atualização da ficha de personagem (atributos, perícias, etc.) com propagação instantânea para todos os clientes via streams bidirecionais.
-- **Lógica de Regras**: A arquitetura atual permite a implementação de regras de diferentes sistemas de RPG, com Tormenta 20 já implementado para o cálculo automático de bônus. A estrutura visa ser genérica para suportar D&D, GURPS, etc. no futuro.
--  
-*(Funcionalidades adicionais como rolagem de dados, Tabuleiro, chat de video e outras interações via gRPC estão planejadas para fases futuras do desenvolvimento)*.
+- Arquitetura em camadas:
+  - **Handlers**
+  - **Services**
+  - **DTOs**
+  - **Models**
+- Backend orientado a eventos
+- Comunicação REST + gRPC
+- Autenticação via JWT
+- Pub/Sub para tempo real
 
 ---
 
@@ -65,65 +47,77 @@ O sistema permitirá o gerenciamento de usuários, mesas de RPG e a relação en
 [![gRPC](https://img.shields.io/badge/gRPC-4283F3?style=for-the-badge&logo=grpc&logoColor=white)](https://grpc.io/)
 
 ### Frontend (Planejado)
-[![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org/)
-[![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/HTML5)
-[![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/CSS)
+- **React** (alternativo)
+- **HTML / CSS**
+
+---
 
 ## 📋 Pré-requisitos
-    
-- Golang 1.25.0
-- Postgres 17.5
-- protobuf compiler
 
-## ⚙️ Configuração
+- Go **1.25.0** ou superior
+- PostgreSQL **17.5**
+- Protobuf Compiler (`protoc`)
 
-### 1. Clone o repositório
+---
 
-````
+## ⚙️ Configuração do Ambiente
+
+### 1️⃣ Clone o repositório
+
+```bash 
 git clone https://github.com/GarotoCowboy/criticao-vtt
 cd criticao-vtt
-````
+```
 
-### 2. Configure as variáveis de ambiente
+### 2️⃣ Baixe as dependencias
+```
+go mod init github.com/GarotoCowboy/vttProject
+go mod tidy
+```
 
-crie um arquivo ````.env```` na raiz do projeto:
-````
-#file: .env
+### 3️⃣ Configure o arquivo .env
 
+#### Crie um arquivo .env na raiz do projeto:
+
+```env
 # DATABASE
+DB_HOST=localhost
+DB_USERNAME=postgres
 DB_PASSWORD=senha_database
-DB_USERNAME=usuario_database
-DB_HOST=ip_database
+DB_URL=postgres://usuario:senha@host:porta/database
 
 # REST
-REST_HOST=ip_serviço_rest
-PORT_REST=porta_serviço_rest
+REST_HOST=localhost
+PORT_REST=8080
 
 # GRPC
-GRPC_HOST=ip_serviço_grpc
-PORT_GRPC=porta_serviço_grpc
+GRPC_HOST=localhost
+PORT_GRPC=50051
 
-````
-### 3. Executar a aplicação
-````
+```
+
+### ▶️ Executando a Aplicação
+```
 #Desenvolvimento
 go run main.go
 
 #Produção
 go build
-````
+./criticao-vtt
+```
 
-A API REST estará disponível em: ````http://{REST_HOST}:{REST_PORT}```` 
+### 🌐 Endpoints
 
-A API GRPC estará disponível em: ````http://{GRPC_HOST}:{GRPC_PORT}````
+```
+#REST API:
+http://{REST_HOST}:{PORT_REST}
 
-### 3. 📚 Documentação da API
-A documentação da API está no link: https://vttproject.postman.co/workspace/golangapi~d97bdf1e-aada-4788-86b2-8949b8d429bb/collection/24061336-6431ac82-57f0-4799-ae4f-61b9c5be2dac?action=share&creator=24061336
+#gRPC:
+{GRPC_HOST}:{PORT_GRPC}
+```
 
-*Ferramentas complementares:*
-- Testes Unitários (planejado/em desenvolvimento inicial).
 
----
+### 📚 Documentação da API
 
 ## 📋 Etapas do Projeto
 - Desenvolvimento dos diagramas de caso de uso, diagrama de classe e diagrama entidade relacionamento.
@@ -138,17 +132,33 @@ A documentação da API está no link: https://vttproject.postman.co/workspace/g
 - Corrigir bugs encontrados após os testes.
 - Lançar a plataforma.
 
----
-
-## 📊 Diagramas
-### Diagrama de Casos de Uso (Inicial)
+### 📊 Diagramas
+#### Diagrama de Casos de Uso (Inicial)
 ![projeto vtt-Caso de Uso drawio](https://github.com/user-attachments/assets/4ecb1797-9342-4c5a-aa71-516118f249bd)
 *O projeto está ainda em desenvolvimento e poderá haver alterações dos diagramas*.
 
----
 
-## 🧑‍💻 Autor
-Pedro Henrique Marques Rocha - Aluno de Sistemas de Informação do Instituto Federal Goiano Campus Urutaí.
 
----
-*Este projeto está em fase de desenvolvimento.*
+Os diagramas podem evoluir conforme o projeto avança.
+
+📌 Status do Projeto
+
+✅ v1.0 – Backend concluído
+
+- REST + gRPC
+- Arquitetura em camadas
+- Tempo real funcional
+- Banco de dados integrado
+
+🚧 v2.0 – Frontend
+- Desenvolvimento das telas em Flutter
+- Interface multi-plataforma
+- Consumo completo dos serviços backend
+
+👨‍💻 Autor
+
+Pedro Henrique Marques Rocha
+Aluno de Sistemas de Informação
+Instituto Federal Goiano – Campus Urutaí
+
+
