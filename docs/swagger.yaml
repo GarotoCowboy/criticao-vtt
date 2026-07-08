@@ -1,0 +1,733 @@
+basePath: /api/v1
+definitions:
+  characterDTO.CharacterResponse:
+    properties:
+      character_name:
+        type: string
+      id:
+        type: integer
+      player_name:
+        type: string
+      sheet_data:
+        $ref: '#/definitions/characterDTO.T20SheetDto'
+      system_key:
+        type: string
+      table_user_id:
+        type: integer
+      user: {}
+    type: object
+  characterDTO.CreateCharacterSwaggerRequest:
+    properties:
+      character_name:
+        example: Guts
+        type: string
+      player_name:
+        example: Pedro
+        type: string
+      sheet_data:
+        allOf:
+        - $ref: '#/definitions/characterDTO.T20SheetDto'
+        description: Aqui sim é a struct da ficha
+      system_key:
+        example: 1
+        type: integer
+      table_user_id:
+        example: 1
+        type: integer
+    type: object
+  characterDTO.ErrorResponse:
+    properties:
+      code:
+        type: integer
+      message:
+        type: string
+    type: object
+  characterDTO.T20SheetDto:
+    properties:
+      abilities:
+        items:
+          $ref: '#/definitions/models.Ability'
+        type: array
+      armor:
+        $ref: '#/definitions/models.Armor'
+      attacks:
+        items:
+          $ref: '#/definitions/models.Attack'
+        type: array
+      attributes:
+        $ref: '#/definitions/models.Attributes'
+      character_info:
+        $ref: '#/definitions/models.CharacterInfo'
+      characterID:
+        type: integer
+      class_and_level:
+        $ref: '#/definitions/models.ClassAndLevel'
+      equipment_items:
+        items:
+          $ref: '#/definitions/models.EquipmentItem'
+        type: array
+      hp_points:
+        $ref: '#/definitions/models.HpPoints'
+      mana_points:
+        $ref: '#/definitions/models.ManaPoints'
+      skills:
+        additionalProperties:
+          $ref: '#/definitions/models.Skill'
+        type: object
+    type: object
+  models.Ability:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+    type: object
+  models.Armor:
+    properties:
+      armorBonus:
+        type: integer
+      defense:
+        type: integer
+      dexterityBonus:
+        type: boolean
+      otherBonus:
+        type: integer
+      shieldBonus:
+        type: integer
+    type: object
+  models.Attack:
+    properties:
+      critical:
+        type: string
+      damage:
+        type: string
+      damageType:
+        type: string
+      name:
+        type: string
+      range:
+        type: string
+      test:
+        type: string
+    type: object
+  models.Attributes:
+    properties:
+      charisma:
+        type: integer
+      constitution:
+        type: integer
+      dexterity:
+        type: integer
+      intelligence:
+        type: integer
+      strength:
+        type: integer
+      wisdom:
+        type: integer
+    type: object
+  models.CharacterInfo:
+    properties:
+      deity:
+        type: string
+      notes:
+        type: string
+      origin:
+        type: string
+      race:
+        type: string
+    type: object
+  models.ClassAndLevel:
+    properties:
+      class:
+        type: string
+      level:
+        type: integer
+    type: object
+  models.EquipmentItem:
+    properties:
+      amount:
+        type: integer
+      name:
+        type: string
+      weight:
+        type: number
+    type: object
+  models.HpPoints:
+    properties:
+      actual:
+        type: integer
+      maxHp:
+        type: integer
+      tempHp:
+        type: integer
+    type: object
+  models.ManaPoints:
+    properties:
+      actual:
+        type: integer
+      maxMana:
+        type: integer
+      tempMana:
+        type: integer
+    type: object
+  models.Skill:
+    properties:
+      armorPenalty:
+        type: boolean
+      bonus:
+        type: integer
+      currentBaseAttribute:
+        type: string
+      defaultBaseAttribute:
+        type: string
+      onlyTrained:
+        type: boolean
+      otherBonus:
+        type: integer
+      trained:
+        type: boolean
+    type: object
+  tableDTO.CreateTableRequest:
+    properties:
+      name:
+        type: string
+      owner_id:
+        type: integer
+      password:
+        description: InviteLink string             `json:"invite_link"`
+        type: string
+    type: object
+  tableDTO.ErrorResponse:
+    properties:
+      code:
+        type: integer
+      message:
+        type: string
+    type: object
+  tableDTO.TableResponse:
+    properties:
+      firstname:
+        type: string
+      id:
+        type: integer
+      invite_link:
+        type: string
+      owner: {}
+      owner_id:
+        type: integer
+      password:
+        type: string
+    type: object
+  tableDTO.UpdateTableRequest:
+    properties:
+      name:
+        type: string
+      password:
+        type: string
+    type: object
+  tableUserDTO.CreateTableUserRequest:
+    properties:
+      role:
+        type: integer
+      table_id:
+        type: integer
+      user_id:
+        type: integer
+    type: object
+  tableUserDTO.ErrorResponse:
+    properties:
+      code:
+        type: integer
+      message:
+        type: string
+    type: object
+  tableUserDTO.TableUserResponse:
+    properties:
+      id:
+        type: integer
+      role:
+        description: |-
+          Role represents a function that user will be in the table
+          Enum: 1,2
+          1 to Player, 2 to GameMaster
+        type: integer
+      table: {}
+      table_id:
+        type: integer
+      user: {}
+      user_id:
+        type: integer
+    required:
+    - role
+    type: object
+  userDTO.CreateUserRequest:
+    properties:
+      email:
+        type: string
+      firstname:
+        type: string
+      imagelink:
+        type: string
+      lastname:
+        type: string
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+  userDTO.ErrorResponse:
+    properties:
+      code:
+        type: integer
+      message:
+        type: string
+    type: object
+  userDTO.UpdateUserRequest:
+    properties:
+      email:
+        type: string
+      firstname:
+        type: string
+      imagelink:
+        type: string
+      lastname:
+        type: string
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+  userDTO.UserResponse:
+    properties:
+      email:
+        type: string
+      firstname:
+        type: string
+      id:
+        type: integer
+      imageLink:
+        type: string
+      lastname:
+        type: string
+      username:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: comercial.pedromarques@gmail.com
+    name: Pedro Henrique Marques
+  description: The VTT API for managing a VTT.
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  title: VTT API
+  version: 1.0.0
+paths:
+  /table:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a Table by ID via query parameter
+      parameters:
+      - description: Table ID
+        in: query
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: No content
+          schema:
+            type: string
+        "400":
+          description: Invalid ID supplied
+          schema:
+            $ref: '#/definitions/tableDTO.ErrorResponse'
+        "404":
+          description: User Not Found
+          schema:
+            $ref: '#/definitions/tableDTO.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/tableDTO.ErrorResponse'
+      summary: Delete a Table
+      tags:
+      - Table
+    get:
+      consumes:
+      - application/json
+      description: Get a table by ID via query parameter
+      parameters:
+      - description: Table ID
+        in: query
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: No content
+          schema:
+            $ref: '#/definitions/tableDTO.TableResponse'
+        "400":
+          description: Invalid ID supplied
+          schema:
+            $ref: '#/definitions/tableDTO.ErrorResponse'
+        "404":
+          description: User Not Found
+          schema:
+            $ref: '#/definitions/tableDTO.ErrorResponse'
+      summary: Get Table
+      tags:
+      - Table
+    post:
+      consumes:
+      - application/json
+      description: Create table
+      parameters:
+      - description: table data
+        in: body
+        name: table
+        required: true
+        schema:
+          $ref: '#/definitions/tableDTO.CreateTableRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: table Created Sucessfully
+          schema:
+            $ref: '#/definitions/tableDTO.TableResponse'
+        "400":
+          description: Bad request error
+          schema:
+            $ref: '#/definitions/tableDTO.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/tableDTO.ErrorResponse'
+      summary: Create table
+      tags:
+      - Table
+    put:
+      consumes:
+      - application/json
+      description: Update Table by ID via query parameter
+      parameters:
+      - description: Table data
+        in: body
+        name: tableDTO
+        required: true
+        schema:
+          $ref: '#/definitions/tableDTO.UpdateTableRequest'
+      - description: Table ID
+        in: query
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Table Created sucessfully
+          schema:
+            $ref: '#/definitions/tableDTO.TableResponse'
+        "400":
+          description: Bad request error
+          schema:
+            $ref: '#/definitions/tableDTO.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/tableDTO.ErrorResponse'
+      summary: Update table
+      tags:
+      - Table
+  /table/character:
+    post:
+      consumes:
+      - application/json
+      description: Create Character
+      parameters:
+      - description: Character data
+        in: body
+        name: character
+        required: true
+        schema:
+          $ref: '#/definitions/characterDTO.CreateCharacterSwaggerRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: characterhandler Created sucessfully
+          schema:
+            $ref: '#/definitions/characterDTO.CharacterResponse'
+        "400":
+          description: Bad request error
+          schema:
+            $ref: '#/definitions/characterDTO.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/characterDTO.ErrorResponse'
+      summary: Create a Character
+      tags:
+      - Character
+  /tableUser:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a TableUser by ID via query parameter
+      parameters:
+      - description: TableUser ID
+        in: query
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: No content
+          schema:
+            type: string
+        "400":
+          description: Invalid ID supplied
+          schema:
+            $ref: '#/definitions/tableUserDTO.ErrorResponse'
+        "404":
+          description: User Not Found
+          schema:
+            $ref: '#/definitions/tableUserDTO.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/tableUserDTO.ErrorResponse'
+      summary: Delete a TableUser
+      tags:
+      - TableUser
+    get:
+      consumes:
+      - application/json
+      description: Get a table tableUser by ID via query parameter
+      parameters:
+      - description: Table User ID
+        in: query
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: No content
+          schema:
+            $ref: '#/definitions/tableUserDTO.TableUserResponse'
+        "400":
+          description: Invalid ID supplied
+          schema:
+            $ref: '#/definitions/tableUserDTO.ErrorResponse'
+        "404":
+          description: User Not Found
+          schema:
+            $ref: '#/definitions/tableUserDTO.ErrorResponse'
+      summary: Get TableUser
+      tags:
+      - TableUser
+    post:
+      consumes:
+      - application/json
+      description: Create tableUser
+      parameters:
+      - description: tableUser data
+        in: body
+        name: tableUser
+        required: true
+        schema:
+          $ref: '#/definitions/tableUserDTO.CreateTableUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: tableUser Created Sucessfully
+          schema:
+            $ref: '#/definitions/tableUserDTO.TableUserResponse'
+        "400":
+          description: Bad request error
+          schema:
+            $ref: '#/definitions/tableUserDTO.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/tableUserDTO.ErrorResponse'
+      summary: Create tableUser
+      tags:
+      - TableUser
+  /tables:
+    get:
+      consumes:
+      - application/json
+      description: Get list of tables
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: No content
+          schema:
+            $ref: '#/definitions/tableDTO.TableResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/tableDTO.TableResponse'
+      summary: List Tables
+      tags:
+      - Table
+  /user:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a userDTO by ID via query parameter
+      parameters:
+      - description: User ID
+        in: query
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: No content
+          schema:
+            type: string
+        "400":
+          description: Invalid ID supplied
+          schema:
+            $ref: '#/definitions/userDTO.ErrorResponse'
+        "404":
+          description: User Not Found
+          schema:
+            $ref: '#/definitions/userDTO.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/userDTO.ErrorResponse'
+      summary: Delete a User
+      tags:
+      - User
+    get:
+      consumes:
+      - application/json
+      description: Get a userDTO by ID via query parameter
+      parameters:
+      - description: User ID
+        in: query
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: No content
+          schema:
+            $ref: '#/definitions/userDTO.UserResponse'
+        "400":
+          description: Invalid ID supplied
+          schema:
+            $ref: '#/definitions/userDTO.ErrorResponse'
+        "404":
+          description: User Not Found
+          schema:
+            $ref: '#/definitions/userDTO.ErrorResponse'
+      summary: Get User
+      tags:
+      - User
+    post:
+      consumes:
+      - application/json
+      description: Create User
+      parameters:
+      - description: User data
+        in: body
+        name: tableUser
+        required: true
+        schema:
+          $ref: '#/definitions/userDTO.CreateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User Created sucessfully
+          schema:
+            $ref: '#/definitions/userDTO.UserResponse'
+        "400":
+          description: Bad request error
+          schema:
+            $ref: '#/definitions/userDTO.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/userDTO.ErrorResponse'
+      summary: Create User
+      tags:
+      - User
+    put:
+      consumes:
+      - application/json
+      description: Update User by ID via query parameter
+      parameters:
+      - description: User data
+        in: body
+        name: userDTO
+        required: true
+        schema:
+          $ref: '#/definitions/userDTO.UpdateUserRequest'
+      - description: User ID
+        in: query
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User Created sucessfully
+          schema:
+            $ref: '#/definitions/userDTO.UserResponse'
+        "400":
+          description: Bad request error
+          schema:
+            $ref: '#/definitions/userDTO.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/userDTO.ErrorResponse'
+      summary: Update tableUser
+      tags:
+      - User
+  /users:
+    get:
+      consumes:
+      - application/json
+      description: Get list of users
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: No content
+          schema:
+            $ref: '#/definitions/userDTO.UserResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/userDTO.ErrorResponse'
+      summary: List Users
+      tags:
+      - User
+swagger: "2.0"
