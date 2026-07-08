@@ -1,23 +1,24 @@
-<div align = "center"> <h1>CriticãoVTT: Uma Plataforma Gratuita para RPG de Mesa</h1></div>
+<div align = "center"> <h1>Criticão (Projeto de Estudo)</h1></div>
 <div align="center"><img src="https://github.com/user-attachments/assets/a478f526-e66e-41de-a6e9-1379f93c5f88" width="250px">
   <p><i>A nossa mascote Lili mordendo um d20</i></p>
 </div>
 <div align="center">
   <h3>Plataforma RESTful com gRPC para RPG de Mesa</h3>
-  <p><i>Projeto desenvolvido para aperfeiçoar conhecimentos em Go (Golang), gRPC, Flutter e arquitetura de software.</i></p>
+  <p><i>Projeto desenvolvido para aperfeiçoar conhecimentos em Go (Golang), tecnologias de backend e frontend.</i></p>
 </div>
 
 ---
 
 ## 🧠 Objetivo
-Este projeto visa a criação de uma plataforma robusta para jogadores de RPG de mesa. A ideia surgiu para preencher uma lacuna no mercado brasileiro, onde as plataformas existentes costumam ser muito caras (muitas vezes cobrando em dólar), oferecendo uma solução acessível e de alta performance para a comunidade.
-
-Servindo como um estudo prático e aprofundado nas seguintes áreas:
-- **Go (Golang)**: Desenvolvimento de APIs RESTful e serviços gRPC concorrentes.
+Este projeto visa a criação de uma plataforma robusta para jogadores de RPG de mesa, servindo como um estudo prático e aprofundado nas seguintes tecnologias:
+- **Go (Golang)**: Desenvolvimento de APIs RESTful, concorrência, gRPC.
 - **PostgreSQL**: Modelagem de dados e interações com banco de dados relacional.
-- **Flutter**: Desenvolvimento da interface do usuário (UI) multi-plataforma.
-- **Arquitetura de Software**: Aplicação de arquitetura em camadas (Services, Handlers, DTOs) e sistemas orientados a eventos (Pub/Sub).
-- **Ferramentas e ORMs**: Utilização de GORM e documentação com Swagger.
+- **React**: Desenvolvimento da interface do usuário (UI) da plataforma.
+- **Arquitetura de Software**: Aplicação de conceitos como arquitetura em camadas (Services, Handlers, DTOs).
+- **Ferramentas e ORMs**: Utilização de GORM para mapeamento objeto-relacional e Swagger para documentação de API.
+- **Protocol Buffers (gRPC)**: Definição de contratos de serviço para comunicação em tempo real.
+
+O projeto busca ser uma alternativa às plataformas existentes no mercado para RPG de mesa.
 
 ---
 ## 🚀 Funcionalidades Principais
@@ -55,13 +56,13 @@ O sistema permitirá o gerenciamento de usuários, mesas de RPG e a relação en
 ---
 
 ## 🛠 Tecnologias
-### Backend (Concluído)
+### Backend
 [![Go](https://img.shields.io/badge/Go-00ADD8?style=for-the-badge&logo=go&logoColor=white)](https://golang.org/)
-[![gRPC](https://img.shields.io/badge/gRPC-4283F3?style=for-the-badge&logo=grpc&logoColor=white)](https://grpc.io/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![Gin Gonic](https://img.shields.io/badge/Gin%20Gonic-009485?style=for-the-badge&logo=gin&logoColor=white)](https://gin-gonic.com/)
 [![GORM](https://img.shields.io/badge/GORM-C42B9F?style=for-the-badge&logo=gorm&logoColor=white)](https://gorm.io/)
 [![Swagger](https://img.shields.io/badge/Swagger-85EA2D?style=for-the-badge&logo=swagger&logoColor=black)](https://swagger.io/)
+[![gRPC](https://img.shields.io/badge/gRPC-4283F3?style=for-the-badge&logo=grpc&logoColor=white)](https://grpc.io/)
 
 ### Frontend (Planejado)
 [![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org/)
@@ -124,16 +125,25 @@ A documentação da API está no link: https://vttproject.postman.co/workspace/g
 
 ---
 
-## 📋 Status do Projeto
-- **v1.0 - Backend:** O desenvolvimento da API REST e dos serviços gRPC em Go (Golang) está finalizado. A arquitetura em camadas (Services, Handlers, DTOs), a integração com banco de dados (PostgreSQL + GORM) e os sistemas de tempo real (gRPC + Pub/Sub) estão implementados e funcionais.
-- **v2.0 - Frontend (Próximos Passos):** O foco agora será no desenvolvimento das telas e da interface do usuário (UI) utilizando Flutter, para criar uma interface amigável, fluida e multi-plataforma que consumirá os serviços do backend.
+## 📋 Etapas do Projeto
+- Desenvolvimento dos diagramas de caso de uso, diagrama de classe e diagrama entidade relacionamento.
+- Desenvolvimento das classes (models).
+- Desenvolvimento do banco de dados.
+- Implementar funcionalidades tais como por exemplo GORM e SWAGGER.
+- Desenvolvimento das regras de negócio (services).
+- Desenvolvimento das funcionalidades que utilizarão gRPC.
+- Desenvolver a UI da plataforma.
+- Realizar testes unitários.
+- Realizar testes de performance.
+- Corrigir bugs encontrados após os testes.
+- Lançar a plataforma.
 
 ---
 
 ## 📊 Diagramas
 ### Diagrama de Casos de Uso (Inicial)
 ![projeto vtt-Caso de Uso drawio](https://github.com/user-attachments/assets/4ecb1797-9342-4c5a-aa71-516118f249bd)
-*O projeto está em desenvolvimento e poderá haver alterações dos diagramas conforme a implementação do sistema avança.*
+*O projeto está ainda em desenvolvimento e poderá haver alterações dos diagramas*.
 
 ---
 
