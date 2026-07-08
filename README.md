@@ -125,7 +125,13 @@ git clone https://github.com/GarotoCowboy/criticao-vtt
 cd criticao-vtt
 ```
 
-### 2️⃣ Configure o arquivo .env
+### 2️⃣ Baixe as dependencias
+```
+go mod init github.com/GarotoCowboy/criticao-vtt
+go mod tidy
+```
+
+### 3️⃣ Configure o arquivo .env
 
 #### Crie um arquivo .env na raiz do projeto:
 
