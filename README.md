@@ -3,11 +3,6 @@
   <p><i>A nossa mascote Lili mordendo um d20</i></p>
 </div>
 
-<div align="center">
-  <img src="https://github.com/user-attachments/assets/a478f526-e66e-41de-a6e9-1379f93c5f88" width="250px"/>
-  <p><i>Lili, a mascote oficial do CriticãoVTT, mordendo um d20</i></p>
-</div>
-
 ---
 
 ## 🧠 Objetivo
