@@ -7,8 +7,10 @@
 /img
 /files
 /db
+/vttData
 *.jpg
 *.jpeg
 *.png
+*.pdf
 
 .env

@@ -28,7 +28,7 @@ func CreateTableUser(db *gorm.DB, req tableUserDTO.CreateTableUserRequest) (mode
 	return tableUser, nil
 }
 
-func CreateTableUserByInviteLink(db *gorm.DB, req tableUserDTO.CreateTableUserInviteLinkRequest) (models.TableUser, error) {
+func CreateTableUserByInviteLink(userID uint, db *gorm.DB, req tableUserDTO.CreateTableUserInviteLinkRequest) (models.TableUser, error) {
 	if err := req.Validate(); err != nil {
 		return models.TableUser{}, err
 	}
@@ -39,7 +39,7 @@ func CreateTableUserByInviteLink(db *gorm.DB, req tableUserDTO.CreateTableUserIn
 	}
 
 	var tableUser = models.TableUser{
-		UserID:  req.UserID,
+		UserID:  userID,
 		TableID: table.ID,
 		Role:    req.Role,
 	}

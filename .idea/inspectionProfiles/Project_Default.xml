@@ -1,0 +1,14 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="GoDfaErrorMayBeNotNil" enabled="true" level="WARNING" enabled_by_default="true">
+      <functions>
+        <function importPath="github.com/GarotoCowboy/vttProject/api/service/table" name="DeleteTable" />
+        <function importPath="github.com/GarotoCowboy/vttProject/api/service/user" name="DeleteUser" />
+      </functions>
+      <methods>
+        <method importPath="github.com/GarotoCowboy/vttProject/api/service/rules/tormenta20Rules" receiver="*RulesService" name="GenerateInitialSheetData" />
+      </methods>
+    </inspection_tool>
+  </profile>
+</component>

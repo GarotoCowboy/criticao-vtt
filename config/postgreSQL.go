@@ -84,6 +84,12 @@ func initializePostgreSQL() (*gorm.DB, error) {
 		return nil, err
 
 	}
+
+	err = db.Exec("CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";").Error
+	if err != nil {
+		logger.ErrorF("Falha ao ativar extensão uuid-ossp: ", err)
+	}
+
 	//	Migrate the schema
 	//err = db.Migrator().DropTable(&models.TableUser{})
 	err = db.AutoMigrate(
