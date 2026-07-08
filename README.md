@@ -83,6 +83,11 @@ PORT_REST=8080
 GRPC_HOST=localhost
 PORT_GRPC=50051
 
+# AUTH / JWT
+
+JWT_SECRET=minha_chave_super_super_secreta
+
+
 ```
 
 ### ▶️ Executando a Aplicação
