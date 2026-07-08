@@ -106,7 +106,8 @@ http://{REST_HOST}:{PORT_REST}
 ```
 
 
-### 📚 Documentação da API
+### 3. 📚 Documentação da API
+A documentação da API está no link: https://vttproject.postman.co/workspace/golangapi~d97bdf1e-aada-4788-86b2-8949b8d429bb/collection/24061336-6431ac82-57f0-4799-ae4f-61b9c5be2dac?action=share&creator=24061336
 
 ## 📋 Etapas do Projeto
 - Desenvolvimento dos diagramas de caso de uso, diagrama de classe e diagrama entidade relacionamento.
