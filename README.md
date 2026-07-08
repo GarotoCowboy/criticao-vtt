@@ -127,7 +127,7 @@ cd criticao-vtt
 
 ### 2️⃣ Baixe as dependencias
 ```
-go mod init github.com/GarotoCowboy/criticao-vtt
+go mod init github.com/GarotoCowboy/vttProject
 go mod tidy
 ```
 
